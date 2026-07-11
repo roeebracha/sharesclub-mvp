@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { companies, type Holding } from "@/lib/dummy-data";
 import {
   addHolding,
@@ -11,6 +10,9 @@ import {
   setPortfolioWorth as savePortfolioWorth,
   updateHolding,
 } from "@/lib/holdings-data";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
 
 export default function DashboardPage() {
   const [holdings, setHoldings] = useState<Holding[]>([]);
@@ -93,26 +95,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen px-6 py-16 sm:px-12 sm:py-24 max-w-3xl mx-auto">
-      <header className="mb-12 flex items-start justify-between">
-        <div>
-          <p className="text-sm font-[family-name:var(--font-geist-mono)] text-foreground/60">
-            ShareClub
-          </p>
-          <h1 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
-            Your dashboard
-          </h1>
-        </div>
-        <Link
-          href="/"
-          className="text-sm text-foreground/60 underline underline-offset-4 hover:text-foreground"
-        >
-          Benefits feed
-        </Link>
+      <header className="mb-12">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+          Your dashboard
+        </h1>
+        <p className="mt-3 text-foreground/70">
+          Enter your portfolio worth and holdings to see which perks you unlock.
+        </p>
       </header>
 
-      {error && (
-        <p className="mb-6 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="mb-6 text-sm text-danger">{error}</p>}
 
       <section className="mb-12">
         <h2 className="text-sm font-medium text-foreground/60 mb-4 uppercase tracking-wide">
@@ -120,19 +112,16 @@ export default function DashboardPage() {
         </h2>
         <form onSubmit={handleSavePortfolio} className="flex items-center gap-3">
           <span className="text-foreground/60">$</span>
-          <input
+          <Input
             type="number"
             min="0"
             value={portfolioInput}
             onChange={(e) => setPortfolioInput(e.target.value)}
-            className="w-40 rounded-lg border border-black/10 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
+            className="w-40"
           />
-          <button
-            type="submit"
-            className="rounded-lg border border-black/10 dark:border-white/15 px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10"
-          >
+          <Button type="submit" variant="primary">
             Save
-          </button>
+          </Button>
         </form>
         <p className="mt-2 text-xs text-foreground/50">
           Currently saved: ${portfolioWorth}
@@ -146,7 +135,7 @@ export default function DashboardPage() {
           </h2>
           <span
             className={`text-xs ${
-              totalPercentage > 100 ? "text-red-600 dark:text-red-400" : "text-foreground/50"
+              totalPercentage > 100 ? "text-danger" : "text-foreground/50"
             }`}
           >
             {totalPercentage}% of 100% allocated
@@ -158,9 +147,9 @@ export default function DashboardPage() {
             const company = companies.find((c) => c.id === holding.companyId)!;
             const isEditing = editingId === holding.companyId;
             return (
-              <div
+              <Card
                 key={holding.companyId}
-                className="flex items-center justify-between gap-4 rounded-xl border border-black/10 dark:border-white/15 p-4"
+                className="flex items-center justify-between gap-4 p-4"
               >
                 <span className="text-sm font-medium">
                   {company.name}{" "}
@@ -169,13 +158,13 @@ export default function DashboardPage() {
 
                 {isEditing ? (
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       max="100"
                       value={editingValue}
                       onChange={(e) => setEditingValue(e.target.value)}
-                      className="w-20 rounded-lg border border-black/10 dark:border-white/15 bg-transparent px-2 py-1 text-sm"
+                      className="w-20 px-2 py-1"
                     />
                     <button
                       onClick={() => handleSaveEdit(holding.companyId)}
@@ -201,17 +190,19 @@ export default function DashboardPage() {
                     </button>
                     <button
                       onClick={() => handleDelete(holding.companyId)}
-                      className="text-xs text-red-600 dark:text-red-400 underline underline-offset-4"
+                      className="text-xs text-danger underline underline-offset-4"
                     >
                       Delete
                     </button>
                   </div>
                 )}
-              </div>
+              </Card>
             );
           })}
           {holdings.length === 0 && (
-            <p className="text-sm text-foreground/50">No holdings yet — add one below.</p>
+            <p className="text-sm text-foreground/50">
+              No holdings yet — add one below.
+            </p>
           )}
         </div>
       </section>
@@ -233,22 +224,22 @@ export default function DashboardPage() {
               </option>
             ))}
           </select>
-          <input
+          <Input
             type="number"
             min="0"
             max="100"
             placeholder="%"
             value={newPercentage}
             onChange={(e) => setNewPercentage(e.target.value)}
-            className="w-24 rounded-lg border border-black/10 dark:border-white/15 bg-transparent px-3 py-2 text-sm"
+            className="w-24"
           />
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={availableCompanies.length === 0}
-            className="rounded-lg border border-black/10 dark:border-white/15 px-3 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-40"
           >
             Add
-          </button>
+          </Button>
         </form>
       </section>
     </div>
