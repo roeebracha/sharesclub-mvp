@@ -7,8 +7,24 @@
   --foreground: #171717;
   --primary: #7c3aed;
   --accent: #f59e0b;
+  --accent-hot: #f97316;
   --success: #16a34a;
   --danger: #dc2626;
+
+  --surface: #faf9fc;
+  --surface-elevated: #ffffff;
+
+  --chart-1: var(--primary);
+  --chart-2: var(--accent);
+  --chart-3: #22c55e;
+  --chart-4: #ec4899;
+  --chart-5: #06b6d4;
+  --chart-6: #f97316;
+  --chart-cash: #9ca3af;
+
+  --shadow-soft: 0 2px 10px -2px rgb(124 58 237 / 0.12);
+  --shadow-elevated: 0 10px 30px -8px rgb(124 58 237 / 0.28);
+  --shadow-glow: 0 0 0 1px rgb(124 58 237 / 0.15), 0 8px 24px -4px rgb(124 58 237 / 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,8 +33,22 @@
     --foreground: #ededed;
     --primary: #a78bfa;
     --accent: #fbbf24;
+    --accent-hot: #fb923c;
     --success: #4ade80;
     --danger: #f87171;
+
+    --surface: #14121a;
+    --surface-elevated: #1c1a24;
+
+    --chart-3: #4ade80;
+    --chart-4: #f472b6;
+    --chart-5: #22d3ee;
+    --chart-6: #fb923c;
+    --chart-cash: #6b7280;
+
+    --shadow-soft: 0 2px 10px -2px rgb(167 139 250 / 0.18);
+    --shadow-elevated: 0 10px 30px -8px rgb(167 139 250 / 0.35);
+    --shadow-glow: 0 0 0 1px rgb(167 139 250 / 0.22), 0 8px 24px -4px rgb(167 139 250 / 0.45);
   }
 }
 
@@ -31,5 +61,11 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .bg-glow {
+    background:
+      radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 70%),
+      radial-gradient(circle at 75% 55%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
   }
 }

@@ -3,7 +3,8 @@ import type { ButtonHTMLAttributes } from "react";
 export type ButtonVariant = "primary" | "secondary" | "danger";
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white border border-transparent hover:opacity-90",
+  primary:
+    "bg-primary text-white border border-transparent hover:opacity-90 hover:shadow-glow transition-shadow",
   secondary:
     "border border-black/10 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10",
   danger:
