@@ -3,11 +3,8 @@ import type { Benefit, BenefitProgress, Company } from "@/lib/dummy-data";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-
-function formatPct(n: number) {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
-}
+import { BenefitProgressSummary } from "@/components/BenefitProgressSummary";
+import { ShareModal } from "@/components/ShareModal";
 
 export function BenefitCard({
   benefit,
@@ -44,19 +41,23 @@ export function BenefitCard({
 
       {progress && !eligible && (
         <div className="mt-4">
-          <ProgressBar value={progress.progressRatio} />
-          <p className="mt-2 text-xs text-foreground/60">
-            Need {formatPct(progress.missingPercentagePoints)}% more (~$
-            {Math.round(progress.missingAmount).toLocaleString()}) in {company.ticker}
-          </p>
+          <BenefitProgressSummary progress={progress} ticker={company.ticker} />
         </div>
       )}
 
-      {eligible && onClaim && (
-        <div className="mt-4">
-          <Button variant="primary" onClick={onClaim}>
-            Claim
-          </Button>
+      {eligible && (
+        <div className="mt-4 flex items-center gap-2">
+          {onClaim && (
+            <Button variant="primary" onClick={onClaim}>
+              Claim
+            </Button>
+          )}
+          <ShareModal
+            variant="benefit"
+            benefitTitle={benefit.title}
+            companyName={company.name}
+            trigger={<Button variant="secondary">Share</Button>}
+          />
         </div>
       )}
     </Card>

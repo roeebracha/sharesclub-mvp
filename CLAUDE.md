@@ -30,11 +30,11 @@ code itself is actually written — verified against the real codebase, not assu
 **תיאור:** תמונת מצב קצרה של איפה הפרויקט נמצא עכשיו ומה הבא בתור, כדי שקלוד לא יבנה משהו
 שעדיין לא בתור. הצ'קליסט המלא נמצא ב-DECISIONS.md המיובא למעלה — לא לשכפל אותו כאן.
 
-Phase 1 (Foundation) is nearly done — the personal dashboard holdings CRUD (roadmap item 6b)
-is the latest shipped piece. Next up: Phase 2 decisions (redemption flow, membership mechanics,
-admin tool architecture), then Phase 3 real build (auth, live Supabase wiring, seed data). The
-full checklist lives in the imported `architecture/DECISIONS.md` above — don't duplicate it
-here, just keep this pointer in sync if phases change.
+Phase 1 (Foundation) is done — the frontend design pass v2 (roadmap item 6d: theming/nav/
+progress/share upgrade) is the latest shipped piece. Next up: Phase 2 decisions (redemption
+flow, membership mechanics, admin tool architecture), then Phase 3 real build (auth, live
+Supabase wiring, seed data). The full checklist lives in the imported `architecture/DECISIONS.md`
+above — don't duplicate it here, just keep this pointer in sync if phases change.
 
 ## Stack
 
@@ -146,6 +146,22 @@ When scoping or planning, ask Claude to:
 3. **Compare to existing patterns.** "How does `lib/holdings-data.ts` work? What would the new
    feature do differently?"
 4. **Push back.** "What's the riskiest part of this?"
+
+## Session summary file
+
+**תיאור:** אחרי סשן עבודה ארוך, קלוד כותב קובץ סיכום (md) שמתעד מה נעשה, בלי לחכות שיבקשו את זה
+כל פעם מחדש.
+
+After a long working session (a plan-driven feature/design pass, not a one-line fix), write a
+`session-summary.md` at the repo root (`dev/`) covering:
+
+- **Brainstorming/thinking process** — what was discussed and decided before building started
+  (the "why", any options considered/rejected).
+- **Files changed** — what changed in each, and why.
+- **Tests run** — what was written/extended, and confirmation they passed.
+
+Overwrite the previous `session-summary.md` each time (it reflects the latest session, not a
+running log — `architecture/DECISIONS.md` is the durable roadmap record).
 
 ## When in doubt
 

@@ -60,4 +60,23 @@ describe("ProgressBar", () => {
     render(<ProgressBar value={0.42} />);
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "42");
   });
+
+  it("renders a tick for each milestone", () => {
+    render(<ProgressBar value={0.3} milestones={[0.5, 0.8]} />);
+    const bar = screen.getByRole("progressbar");
+    expect(bar.querySelectorAll("[aria-hidden]")).toHaveLength(2);
+  });
+
+  it("switches to the hot accent color at 80% or above", () => {
+    render(<ProgressBar value={0.8} />);
+    const fill = screen.getByRole("progressbar").firstElementChild;
+    expect(fill).toHaveClass("bg-accent-hot");
+  });
+
+  it("keeps the regular accent color below 80%", () => {
+    render(<ProgressBar value={0.79} />);
+    const fill = screen.getByRole("progressbar").firstElementChild;
+    expect(fill).toHaveClass("bg-accent");
+    expect(fill).not.toHaveClass("bg-accent-hot");
+  });
 });

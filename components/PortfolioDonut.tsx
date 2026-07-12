@@ -12,8 +12,15 @@ type Slice = {
   color: string;
 };
 
-const COLORS = ["#7c3aed", "#f59e0b", "#22c55e", "#ec4899", "#06b6d4", "#f97316"];
-const CASH_COLOR = "#9ca3af";
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+];
+const CASH_COLOR = "var(--chart-cash)";
 
 const CX = 120;
 const CY = 120;
@@ -89,7 +96,6 @@ export function PortfolioDonut({
           <motion.path
             key={slice.ticker}
             d={arcPath(arcs[i].a0, arcs[i].a1)}
-            fill={slice.color}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.08, type: "spring", stiffness: 120 }}
@@ -98,7 +104,7 @@ export function PortfolioDonut({
             dragSnapToOrigin
             dragConstraints={{ left: -10, right: 10, top: -10, bottom: 10 }}
             dragElastic={0.3}
-            style={{ cursor: "grab" }}
+            style={{ fill: slice.color, cursor: "grab" }}
             onHoverStart={() => setActive(i)}
             onHoverEnd={() => setActive(null)}
           />

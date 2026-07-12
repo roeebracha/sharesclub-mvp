@@ -9,11 +9,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-
-function formatPct(n: number) {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
-}
+import { BenefitProgressSummary } from "@/components/BenefitProgressSummary";
 
 export default function BenefitDetail({ params }: { params: { id: string } }) {
   const benefit = benefits.find((b) => b.id === params.id);
@@ -68,12 +64,7 @@ export default function BenefitDetail({ params }: { params: { id: string } }) {
 
       {!progress.eligible && (
         <div className="mt-8">
-          <ProgressBar value={progress.progressRatio} />
-          <p className="mt-2 text-sm text-foreground/60">
-            Need {formatPct(progress.missingPercentagePoints)}% more (~$
-            {Math.round(progress.missingAmount).toLocaleString()}) in{" "}
-            {company.ticker} to unlock.
-          </p>
+          <BenefitProgressSummary progress={progress} ticker={company.ticker} />
         </div>
       )}
 

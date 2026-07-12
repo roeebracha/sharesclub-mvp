@@ -3,7 +3,8 @@
 import confetti from "canvas-confetti";
 import { BenefitCard } from "@/components/BenefitCard";
 import { PortfolioDonut } from "@/components/PortfolioDonut";
-import { ShareButton } from "@/components/ShareButton";
+import { ShareModal } from "@/components/ShareModal";
+import { Button } from "@/components/ui/Button";
 import {
   benefits,
   benefitProgress,
@@ -44,13 +45,19 @@ export default function Home() {
         </p>
       </header>
 
-      <section className="mb-16 flex flex-col items-center gap-6">
+      <section className="relative mb-16 flex flex-col items-center gap-6">
+        <div className="bg-glow pointer-events-none absolute inset-0 -z-10" aria-hidden />
         <PortfolioDonut
           holdings={demoUser.holdings}
           companies={companies}
           portfolioWorth={demoUser.portfolioWorth}
         />
-        <ShareButton />
+        <ShareModal
+          variant="portfolio"
+          unlockedCount={ready.length}
+          totalCount={items.length}
+          trigger={<Button variant="primary">Share your progress</Button>}
+        />
       </section>
 
       <main className="grid gap-12">
