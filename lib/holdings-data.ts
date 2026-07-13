@@ -2,19 +2,13 @@
 
 // Data-access layer for the personal dashboard's holdings CRUD.
 //
-// This is intentionally shaped like a real data layer (async functions, one
-// responsibility each) even though it currently just mutates an in-memory
-// array seeded from `demoUser`. When auth + Supabase are wired in (Phase 3),
-// swap the internals of these functions to query/update the `holdings` and
-// `users` tables — the dashboard UI that calls them won't need to change.
-//
-// State resets on page refresh by design (no localStorage): real persistence
-// arrives once this is backed by the database, not before.
+// Backed by the real `holdings`/`users` tables via Supabase, scoped to the
+// current signed-in user (RLS is the defense-in-depth backstop). Function
+// signatures are unchanged from the in-memory version so the dashboard UI
+// didn't need to change.
 
-import { demoUser, type Holding } from "@/lib/dummy-data";
-
-let holdingsStore: Holding[] = [...demoUser.holdings];
-let portfolioWorthStore = demoUser.portfolioWorth;
+import { createClient } from "@/lib/supabase/client";
+import type { Holding } from "@/lib/dummy-data";
 
 function totalPercentage(holdings: Holding[], excludeCompanyId?: string) {
   return holdings
@@ -22,41 +16,94 @@ function totalPercentage(holdings: Holding[], excludeCompanyId?: string) {
     .reduce((sum, h) => sum + h.percentage, 0);
 }
 
+type SupabaseLike = ReturnType<typeof createClient>;
+
+async function requireUserId(supabase: SupabaseLike) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+  return user.id;
+}
+
 export async function getHoldings(): Promise<Holding[]> {
-  return holdingsStore;
+  const supabase = createClient();
+  const userId = await requireUserId(supabase);
+  const { data, error } = await supabase
+    .from("holdings")
+    .select("company_id, percentage")
+    .eq("user_id", userId);
+  if (error) throw error;
+  return (data ?? []).map((h: { company_id: string; percentage: number }) => ({
+    companyId: h.company_id,
+    percentage: h.percentage,
+  }));
 }
 
 export async function getPortfolioWorth(): Promise<number> {
-  return portfolioWorthStore;
+  const supabase = createClient();
+  const userId = await requireUserId(supabase);
+  const { data, error } = await supabase
+    .from("users")
+    .select("portfolio_worth")
+    .eq("id", userId)
+    .single();
+  if (error) throw error;
+  return data.portfolio_worth;
 }
 
 export async function setPortfolioWorth(value: number): Promise<number> {
-  portfolioWorthStore = value;
-  return portfolioWorthStore;
+  const supabase = createClient();
+  const userId = await requireUserId(supabase);
+  const { error } = await supabase
+    .from("users")
+    .update({ portfolio_worth: value })
+    .eq("id", userId);
+  if (error) throw error;
+  return getPortfolioWorth();
 }
 
 export async function addHolding(companyId: string, percentage: number): Promise<Holding[]> {
-  if (holdingsStore.some((h) => h.companyId === companyId)) {
+  const supabase = createClient();
+  const userId = await requireUserId(supabase);
+  const current = await getHoldings();
+  if (current.some((h) => h.companyId === companyId)) {
     throw new Error("You already hold this company — edit it instead.");
   }
-  if (totalPercentage(holdingsStore) + percentage > 100) {
+  if (totalPercentage(current) + percentage > 100) {
     throw new Error("Total holdings can't exceed 100% of your portfolio.");
   }
-  holdingsStore = [...holdingsStore, { companyId, percentage }];
-  return holdingsStore;
+  const { error } = await supabase
+    .from("holdings")
+    .insert({ user_id: userId, company_id: companyId, percentage });
+  if (error) throw error;
+  return getHoldings();
 }
 
 export async function updateHolding(companyId: string, percentage: number): Promise<Holding[]> {
-  if (totalPercentage(holdingsStore, companyId) + percentage > 100) {
+  const supabase = createClient();
+  const userId = await requireUserId(supabase);
+  const current = await getHoldings();
+  if (totalPercentage(current, companyId) + percentage > 100) {
     throw new Error("Total holdings can't exceed 100% of your portfolio.");
   }
-  holdingsStore = holdingsStore.map((h) =>
-    h.companyId === companyId ? { ...h, percentage } : h
-  );
-  return holdingsStore;
+  const { error } = await supabase
+    .from("holdings")
+    .update({ percentage })
+    .eq("user_id", userId)
+    .eq("company_id", companyId);
+  if (error) throw error;
+  return getHoldings();
 }
 
 export async function deleteHolding(companyId: string): Promise<Holding[]> {
-  holdingsStore = holdingsStore.filter((h) => h.companyId !== companyId);
-  return holdingsStore;
+  const supabase = createClient();
+  const userId = await requireUserId(supabase);
+  const { error } = await supabase
+    .from("holdings")
+    .delete()
+    .eq("user_id", userId)
+    .eq("company_id", companyId);
+  if (error) throw error;
+  return getHoldings();
 }

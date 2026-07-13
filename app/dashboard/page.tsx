@@ -25,11 +25,15 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getHoldings().then(setHoldings);
-    getPortfolioWorth().then((value) => {
-      setPortfolioWorthState(value);
-      setPortfolioInput(String(value));
-    });
+    getHoldings()
+      .then(setHoldings)
+      .catch((err) => setError((err as Error).message));
+    getPortfolioWorth()
+      .then((value) => {
+        setPortfolioWorthState(value);
+        setPortfolioInput(String(value));
+      })
+      .catch((err) => setError((err as Error).message));
   }, []);
 
   const totalPercentage = holdings.reduce((sum, h) => sum + h.percentage, 0);
