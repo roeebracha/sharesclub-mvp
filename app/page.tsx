@@ -1,27 +1,44 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { BenefitCard } from "@/components/BenefitCard";
 import { PortfolioDonut } from "@/components/PortfolioDonut";
 import { ShareModal } from "@/components/ShareModal";
 import { Button } from "@/components/ui/Button";
 import {
-  benefits,
   benefitProgress,
-  companies,
-  demoUser,
+  type Benefit,
+  type Company,
+  type Holding,
 } from "@/lib/dummy-data";
+import { getCompanies, getBenefits } from "@/lib/catalog-data";
+import { getHoldings, getPortfolioWorth } from "@/lib/holdings-data";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function Home() {
-  const items = benefits.map((benefit) => {
-    const company = companies.find((c) => c.id === benefit.companyId)!;
-    const progress = benefitProgress(
-      benefit,
-      demoUser.portfolioWorth,
-      demoUser.holdings,
-    );
-    return { benefit, company, progress };
-  });
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
+  const [portfolioWorth, setPortfolioWorth] = useState(0);
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCompanies().then(setCompanies);
+    getBenefits().then(setBenefits);
+    getHoldings().then(setHoldings);
+    getPortfolioWorth().then(setPortfolioWorth);
+    getCurrentUser().then((user) => setUserName(user?.name ?? null));
+  }, []);
+
+  const items = benefits
+    .map((benefit) => {
+      const company = companies.find((c) => c.id === benefit.companyId);
+      if (!company) return null;
+      const progress = benefitProgress(benefit, portfolioWorth, holdings);
+      return { benefit, company, progress };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 
   const ready = items.filter((i) => i.progress.eligible);
   const locked = items.filter((i) => !i.progress.eligible);
@@ -37,6 +54,11 @@ export default function Home() {
         <p className="text-sm font-[family-name:var(--font-geist-mono)] text-foreground/60">
           Your portfolio
         </p>
+        {userName && (
+          <p className="mt-1 text-sm text-foreground/70">
+            Welcome to ShareClub, {userName}
+          </p>
+        )}
         <h1 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
           Real perks for real shareholders.
         </h1>
@@ -48,9 +70,9 @@ export default function Home() {
       <section className="relative mb-16 flex flex-col items-center gap-6">
         <div className="bg-glow pointer-events-none absolute inset-0 -z-10" aria-hidden />
         <PortfolioDonut
-          holdings={demoUser.holdings}
+          holdings={holdings}
           companies={companies}
-          portfolioWorth={demoUser.portfolioWorth}
+          portfolioWorth={portfolioWorth}
         />
         <ShareModal
           variant="portfolio"
