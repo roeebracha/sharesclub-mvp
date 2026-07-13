@@ -1,26 +1,66 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  benefits,
-  benefitProgress,
-  companies,
-  demoUser,
-} from "@/lib/dummy-data";
+import { createClient } from "@/lib/supabase/server";
+import { benefitProgress, type Benefit } from "@/lib/eligibility";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BenefitProgressSummary } from "@/components/BenefitProgressSummary";
 
-export default function BenefitDetail({ params }: { params: { id: string } }) {
-  const benefit = benefits.find((b) => b.id === params.id);
-  if (!benefit) notFound();
+export default async function BenefitDetail({ params }: { params: { id: string } }) {
+  const supabase = await createClient();
 
-  const company = companies.find((c) => c.id === benefit.companyId)!;
-  const progress = benefitProgress(
-    benefit,
-    demoUser.portfolioWorth,
-    demoUser.holdings,
-  );
+  const { data: benefitRow } = await supabase
+    .from("benefits")
+    .select("id, company_id, title, description, threshold_type, threshold_value")
+    .eq("id", params.id)
+    .single();
+
+  if (!benefitRow) notFound();
+
+  const { data: companyRow } = await supabase
+    .from("companies")
+    .select("id, name, ticker")
+    .eq("id", benefitRow.company_id)
+    .single();
+
+  const benefit: Benefit = {
+    id: benefitRow.id,
+    companyId: benefitRow.company_id,
+    title: benefitRow.title,
+    description: benefitRow.description,
+    thresholdType: benefitRow.threshold_type,
+    thresholdValue: benefitRow.threshold_value,
+  };
+  const company = companyRow!;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let portfolioWorth = 0;
+  let holdings: { companyId: string; percentage: number }[] = [];
+  if (user) {
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("portfolio_worth")
+      .eq("id", user.id)
+      .single();
+    portfolioWorth = userRow?.portfolio_worth ?? 0;
+
+    const { data: holdingsRows } = await supabase
+      .from("holdings")
+      .select("company_id, percentage")
+      .eq("user_id", user.id);
+    holdings = (holdingsRows ?? []).map(
+      (h: { company_id: string; percentage: number }) => ({
+        companyId: h.company_id,
+        percentage: h.percentage,
+      }),
+    );
+  }
+
+  const progress = benefitProgress(benefit, portfolioWorth, holdings);
 
   const thresholdCopy =
     benefit.thresholdType === "percent"

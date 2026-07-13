@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { Company, Holding } from "@/lib/dummy-data";
+import type { Company, Holding } from "@/lib/eligibility";
 
 type Slice = {
   label: string;

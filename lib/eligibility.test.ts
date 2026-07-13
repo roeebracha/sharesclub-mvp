@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isEligible, type Benefit, type Holding } from "@/lib/dummy-data";
+import { isEligible, type Benefit, type Holding } from "@/lib/eligibility";
 
 const percentBenefit: Benefit = {
   id: "b",

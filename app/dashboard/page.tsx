@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { companies, type Holding } from "@/lib/dummy-data";
+import type { Company, Holding } from "@/lib/eligibility";
+import { getCompanies } from "@/lib/catalog-data";
 import {
   addHolding,
   deleteHolding,
@@ -15,6 +16,7 @@ import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
 
 export default function DashboardPage() {
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [portfolioWorth, setPortfolioWorthState] = useState(0);
   const [portfolioInput, setPortfolioInput] = useState("");
@@ -25,11 +27,18 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getHoldings().then(setHoldings);
-    getPortfolioWorth().then((value) => {
-      setPortfolioWorthState(value);
-      setPortfolioInput(String(value));
-    });
+    getCompanies()
+      .then(setCompanies)
+      .catch((err) => setError((err as Error).message));
+    getHoldings()
+      .then(setHoldings)
+      .catch((err) => setError((err as Error).message));
+    getPortfolioWorth()
+      .then((value) => {
+        setPortfolioWorthState(value);
+        setPortfolioInput(String(value));
+      })
+      .catch((err) => setError((err as Error).message));
   }, []);
 
   const totalPercentage = holdings.reduce((sum, h) => sum + h.percentage, 0);
@@ -144,7 +153,8 @@ export default function DashboardPage() {
 
         <div className="grid gap-3">
           {holdings.map((holding) => {
-            const company = companies.find((c) => c.id === holding.companyId)!;
+            const company = companies.find((c) => c.id === holding.companyId);
+            if (!company) return null;
             const isEditing = editingId === holding.companyId;
             return (
               <Card
