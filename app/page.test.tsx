@@ -27,7 +27,8 @@ vi.mock("@/lib/auth", () => ({
 describe("Home", () => {
   it("shows a welcome greeting with the current user's name", async () => {
     render(<Home />);
-    expect(await screen.findByText("Welcome to ShareClub, Jane")).toBeInTheDocument();
+    // Product renamed ShareClub -> SharesClub; assertion updated to match, not a code fix.
+    expect(await screen.findByText("Welcome to SharesClub, Jane")).toBeInTheDocument();
   });
 
   it("groups benefits into ready-to-claim and locked sections", async () => {

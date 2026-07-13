@@ -56,7 +56,7 @@ export default function Home() {
         </p>
         {userName && (
           <p className="mt-1 text-sm text-foreground/70">
-            Welcome to ShareClub, {userName}
+            Welcome to SharesClub, {userName}
           </p>
         )}
         <h1 className="mt-3 text-3xl sm:text-4xl font-semibold tracking-tight">
