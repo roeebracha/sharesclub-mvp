@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import BenefitDetail from "@/app/benefits/[id]/page";
-import { benefits, companies } from "@/lib/dummy-data";
+import { benefits, companies } from "@/lib/fixtures";
 import { createFakeQueryBuilder } from "@/lib/test-utils/fake-supabase-client";
 
 const notFound = vi.fn(() => {

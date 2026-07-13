@@ -8,7 +8,7 @@
 // didn't need to change.
 
 import { createClient } from "@/lib/supabase/client";
-import type { Holding } from "@/lib/dummy-data";
+import type { Holding } from "@/lib/eligibility";
 
 function totalPercentage(holdings: Holding[], excludeCompanyId?: string) {
   return holdings

@@ -11,7 +11,7 @@ import {
   type Benefit,
   type Company,
   type Holding,
-} from "@/lib/dummy-data";
+} from "@/lib/eligibility";
 import { getCompanies, getBenefits } from "@/lib/catalog-data";
 import { getHoldings, getPortfolioWorth } from "@/lib/holdings-data";
 import { getCurrentUser } from "@/lib/auth";

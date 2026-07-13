@@ -1,12 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import Home from "@/app/page";
-import {
-  benefitProgress,
-  benefits,
-  companies,
-  demoUser,
-} from "@/lib/dummy-data";
+import { benefitProgress } from "@/lib/eligibility";
+import { benefits, companies, demoUser } from "@/lib/fixtures";
 
 // canvas-confetti touches the DOM/canvas; it's only called on click, but stub
 // it so importing the page never trips over jsdom's missing canvas support.

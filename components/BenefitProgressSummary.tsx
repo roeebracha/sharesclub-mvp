@@ -1,4 +1,4 @@
-import type { BenefitProgress } from "@/lib/dummy-data";
+import type { BenefitProgress } from "@/lib/eligibility";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountUp } from "@/components/ui/CountUp";
 

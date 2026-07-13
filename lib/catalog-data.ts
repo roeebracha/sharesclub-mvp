@@ -5,7 +5,7 @@
 // it stops being static dummy data.
 
 import { createClient } from "@/lib/supabase/client";
-import type { Benefit, Company, ThresholdType } from "@/lib/dummy-data";
+import type { Benefit, Company, ThresholdType } from "@/lib/eligibility";
 
 export async function getCompanies(): Promise<Company[]> {
   const supabase = createClient();

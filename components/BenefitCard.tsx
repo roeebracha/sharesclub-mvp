@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Benefit, BenefitProgress, Company } from "@/lib/dummy-data";
+import type { Benefit, BenefitProgress, Company } from "@/lib/eligibility";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
