@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { Header } from "@/components/Header";
 
+const mockUsePathname = vi.fn(() => "/");
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => mockUsePathname(),
   useRouter: () => ({ push: vi.fn() }),
 }));
 
@@ -26,6 +28,7 @@ vi.mock("@/lib/auth", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockUsePathname.mockReturnValue("/");
   mockOnAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe } } });
 });
 
@@ -61,5 +64,19 @@ describe("Header", () => {
     await waitFor(() => {
       expect(screen.getByRole("link", { name: "Home" })).toHaveClass("bg-primary");
     });
+  });
+
+  it("renders nothing on the login page", () => {
+    mockUsePathname.mockReturnValue("/login");
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+    const { container } = render(<Header />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("renders nothing on the signup page", () => {
+    mockUsePathname.mockReturnValue("/signup");
+    mockGetSession.mockResolvedValue({ data: { session: null } });
+    const { container } = render(<Header />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

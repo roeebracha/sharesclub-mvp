@@ -1,80 +1,67 @@
-# Session summary — Frontend design pass v2
+# Session summary — Fix login → feed transition & page separation
 
 ## Brainstorming / decisions before building
 
-User wanted the vibe pushed further toward "social-media, young, fun, gamified" before Phase 3
-(real Supabase wiring/auth) starts. Three concrete complaints kicked it off:
+User reported: after logging in, the login page didn't disappear — they expected to land
+straight on the feed, with a nav clearly showing feed / portfolio editing / log out once
+authenticated.
 
-1. Progress-bar copy under each benefit was static and didn't build urgency.
-2. The share button was a boring hover strip with fake single-letter logos.
-3. `app/page.tsx` always rendered the same thin, hardcoded `demoUser` fixture.
+Investigated with two parallel Explore agents (one on the login/auth redirect flow, one on the
+Header/nav structure) plus direct reads of the implicated files. Found two real, compounding bugs
+— not a missing feature, since the feed/Dashboard/Log-out nav already existed in `Header.tsx`:
 
-Scope expanded in discussion to also cover the flat color/background system and the header nav
-(no mobile responsiveness, no active-route indication). Explicitly **out of scope**:
-`app/dashboard`, `app/login`, `app/signup`, `app/checkout` — kept minimal on purpose, no added
-friction/gamification there.
+1. `components/Header.tsx` rendered on every route via `app/layout.tsx`, including `/login` and
+   `/signup` — no clean chrome separation between the auth pages and the authenticated app.
+2. Because Header (with its always-present `Home` link to `/`) rendered on `/login`, Next.js
+   would prefetch `/` while still unauthenticated; middleware redirects that prefetch back to
+   `/login`, and the client Router Cache could then serve that stale/negative result back when
+   `app/login/page.tsx` called `router.push("/")` after a successful sign-in — since neither
+   `signIn`/`signUp` nor the calling pages ever called `router.refresh()`, nothing forced a fresh
+   Server-Component fetch of `/` with the new session cookie. This is the standard cause of
+   "auth succeeded but the old page is still showing" in Next.js App Router + Supabase SSR.
 
-Confirmed decisions before coding: build a small `Modal.tsx` primitive (approved exception to
-"ask before adding a component library"), use a collapsing pill nav (not a drawer/bottom-tabs),
-use `react-icons` for real brand logos, per-benefit share only appears on already-eligible
-benefits, and share content must **never** show `$` amounts (percentages/achievement framing
-only) — enforced at the type level via a discriminated union, not just convention.
+Confirmed via code reading only (not live reproduction) — flagged explicitly to the user as a
+diagnosis, not a guaranteed root cause, since browser verification wasn't available this session
+(see below). No `architecture/DECISIONS.md` items were implicated; this was scoped as a bug fix,
+not a product decision. `app/checkout/page.tsx` also renders Header today but wasn't touched —
+out of scope, not mentioned by the user and not behind auth.
 
 ## Files changed
 
-- `app/globals.css`, `tailwind.config.ts` — new tokens: `surface`/`surface-elevated`,
-  `chart-1..6`/`chart-cash`, `accent-hot`, soft/elevated/glow shadows; `.bg-glow` utility built
-  with `color-mix()` so it adapts to light/dark without duplicate rules.
-- `components/PortfolioDonut.tsx` — real bug fix: hardcoded hex `COLORS` array replaced with
-  `var(--chart-N)` references, applied via `style={{ fill }}` instead of the `fill` attribute.
-- `components/ui/Card.tsx`, `components/ui/Button.tsx` — added `elevated`/glow-on-hover
-  treatment.
-- `components/Header.tsx`, `components/Header.test.tsx` — rebuilt as a collapsing pill nav with
-  active-route highlighting via `usePathname()` (client component); test mocks
-  `next/navigation` additively, new active-pill assertion added.
-- `components/ui/ProgressBar.tsx` — optional `milestones` ticks + color escalation to
-  `accent-hot` (pulsing) at ≥80%, all backward compatible.
-- `components/ui/CountUp.tsx` (new) — animated stat; guards `window.matchMedia` with a
-  `typeof === "function"` check (jsdom doesn't implement it — a real cross-environment bug,
-  not just a test artifact).
-- `components/BenefitProgressSummary.tsx` (new) — shared urgency copy ("Getting there" /
-  "Almost unlocked!") + `ProgressBar` + `CountUp`, wired into both `BenefitCard.tsx` and
-  `app/benefits/[id]/page.tsx`, replacing duplicated inline `formatPct`/progress blocks in both.
-- `components/ui/Modal.tsx` (new) — Escape/backdrop-close primitive, respects reduced motion.
-- `components/ShareCard.tsx` (new) — discriminated union (`benefit` | `portfolio` variant),
-  structurally cannot receive a `$` amount.
-- `components/ShareModal.tsx` (new) — wraps `Modal` + `ShareCard` + real brand logos
-  (`react-icons/si` for X/Instagram/Facebook/WhatsApp, `react-icons/fa6`'s `FaLinkedin` since
-  `SiLinkedin` doesn't exist in the installed `react-icons` version).
-- `components/BenefitCard.tsx` — share trigger next to Claim, eligible-only.
-- `app/page.tsx` — swapped old `ShareButton` for `ShareModal` (portfolio variant), added the
-  `.bg-glow` hero treatment.
-- `components/ShareButton.tsx` — deleted (superseded, no test locked in its API).
-- `lib/dummy-data.ts` — additively enriched: `c4`–`c7` companies, `b4`–`b8` benefits, extended
-  `demoUser.holdings`, mixing already-eligible / near-unlock (≥80%) / far-off / zero-holdings
-  states for visual variety. Existing `c1`–`c3`/`b1`–`b3`/original holdings untouched.
-- `architecture/DECISIONS.md`, `CLAUDE.md` — roadmap item 6c flipped to done, new item 6d added,
-  "Current phase" pointer updated. New **Session summary file** convention added to `CLAUDE.md`.
+- `components/Header.tsx` — added an early return (`if (pathname === "/login" || pathname ===
+  "/signup") return null;`) after the existing hooks, so Header renders nothing on the two auth
+  pages. Consistent with Header's existing pathname-branching pattern (already used for
+  active-pill state); `app/layout.tsx` itself untouched.
+- `app/login/page.tsx`, `app/signup/page.tsx` — added `router.refresh()` immediately after the
+  existing `router.push("/")` on successful sign-in/sign-up, forcing Next.js to refetch Server
+  Component data for `/` with the current session cookie instead of potentially reusing a cached
+  pre-auth render.
+- `components/Header.test.tsx` — `usePathname` mock changed from a static return to a
+  `vi.fn()` so individual tests can override the pathname; 2 new tests added (Header renders
+  nothing on `/login`, same for `/signup`). Existing 3 tests unmodified.
+- `app/auth-pages.test.tsx` — `useRouter` mock extended with a `refresh` spy; the two existing
+  "redirects to / on success" tests (login and signup) extended to also assert `refresh` was
+  called. No existing assertion weakened or removed.
 
 ## Tests run
 
-- `components/ui/primitives.test.tsx` — 3 new `ProgressBar` tests added (milestone ticks, hot
-  color at ≥80%, regular color below 80%); existing tests untouched.
-- `components/BenefitProgressSummary.test.tsx` (new) — 4 tests: no badge <50%, "Getting there"
-  50–79%, "Almost unlocked!" ≥80%, full copy content assertion.
-- `components/ui/Modal.test.tsx` (new) — 5 tests: closed renders nothing, open renders content,
-  backdrop click closes, inner click doesn't close, Escape closes.
-- `components/ShareCard.test.tsx` (new) — 3 tests including a regression guard asserting
-  rendered output never contains `$`.
-- `components/ShareModal.test.tsx` (new) — 3 tests: dialog hidden until trigger click, correct
-  `ShareCard` variant rendered per trigger.
-- `components/Header.test.tsx` — extended with an active-pill class assertion; existing 3
-  link/href tests unmodified.
-- Full suite (`app/page.test.tsx`, `app/benefits/[id]/page.test.tsx`,
-  `lib/dummy-data.test.ts`, `lib/benefit-progress.test.ts`, `app/auth-pages.test.tsx`) confirmed
-  green after each build step — no existing test was edited to force a pass.
-- `npx tsc --noEmit` clean (two pre-existing `node_modules` type-definition warnings unrelated
-  to any change here, confirmed via inspection).
-- Manual visual verification via Claude Preview: light/dark mode, mobile nav collapse, donut
-  colors, hot progress bar pulse, share modal (real logos, no `$` shown) — no console/server
-  errors.
+- New/extended tests written first, confirmed **red** against the unmodified code (4 failing
+  assertions), then confirmed **green** after the two source fixes — no test was edited to force
+  a pass.
+- Full suite (`npx vitest run`): 15 files, 81 tests, all green.
+- `npx tsc --noEmit`: clean except the same two pre-existing `node_modules` type-definition
+  warnings (`aria-query 2`, `estree 2`) noted in prior session summaries — unrelated to this
+  change.
+
+## Verification not completed this session
+
+Same constraint as the prior responsive-mobile-pass session: `/` and `/dashboard` sit behind the
+auth middleware, and no test credentials were available, so the actual login → feed transition
+was **not** verified live in a browser. The `router.refresh()` fix is the standard, well-
+established pattern for this class of bug, but it's a diagnosis from static code reading, not a
+confirmed-fixed live repro. Before merging, please manually verify:
+
+- Logging in from `/login` lands cleanly on `/` with no visible login form afterward.
+- `/login` and `/signup` no longer show the app header/nav.
+- The authenticated nav (Home / Dashboard / Log out) appears correctly on `/` and `/dashboard`
+  after login.

@@ -23,6 +23,7 @@ export default function Signup() {
     try {
       await signUp(email, password, name);
       router.push("/");
+      router.refresh();
     } catch (err) {
       setError((err as Error).message);
     } finally {
