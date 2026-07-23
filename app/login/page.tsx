@@ -22,6 +22,7 @@ export default function Login() {
     try {
       await signIn(email, password);
       router.push("/");
+      router.refresh();
     } catch (err) {
       setError((err as Error).message);
     } finally {

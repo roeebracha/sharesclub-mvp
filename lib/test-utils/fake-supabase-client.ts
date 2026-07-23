@@ -16,6 +16,7 @@ export function createFakeQueryBuilder<T>(result: FakeResult<T>) {
   const chain = () => builder;
   builder.select = vi.fn(chain);
   builder.eq = vi.fn(chain);
+  builder.order = vi.fn(chain);
   builder.update = vi.fn(chain);
   builder.insert = vi.fn(chain);
   builder.delete = vi.fn(chain);

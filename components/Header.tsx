@@ -24,6 +24,8 @@ export function Header() {
     return () => subscription.unsubscribe();
   }, []);
 
+  if (pathname === "/login" || pathname === "/signup") return null;
+
   async function handleLogout() {
     await signOut();
     router.push("/login");

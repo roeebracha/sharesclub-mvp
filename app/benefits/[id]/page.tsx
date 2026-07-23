@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { benefitProgress, type Benefit } from "@/lib/eligibility";
+import { benefitProgress, type Benefit, type MembershipTier } from "@/lib/eligibility";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -12,7 +12,7 @@ export default async function BenefitDetail({ params }: { params: { id: string }
 
   const { data: benefitRow } = await supabase
     .from("benefits")
-    .select("id, company_id, title, description, threshold_type, threshold_value")
+    .select("id, company_id, title, description, min_tier_id")
     .eq("id", params.id)
     .single();
 
@@ -24,22 +24,33 @@ export default async function BenefitDetail({ params }: { params: { id: string }
     .eq("id", benefitRow.company_id)
     .single();
 
+  const { data: tierRows } = await supabase
+    .from("membership_tiers")
+    .select("id, name, min_portfolio_value, rank")
+    .order("rank");
+
   const benefit: Benefit = {
     id: benefitRow.id,
     companyId: benefitRow.company_id,
     title: benefitRow.title,
     description: benefitRow.description,
-    thresholdType: benefitRow.threshold_type,
-    thresholdValue: benefitRow.threshold_value,
+    minTierId: benefitRow.min_tier_id,
   };
   const company = companyRow!;
+  const tiers: MembershipTier[] = (tierRows ?? []).map(
+    (t: { id: string; name: MembershipTier["name"]; min_portfolio_value: number; rank: number }) => ({
+      id: t.id,
+      name: t.name,
+      minPortfolioValue: t.min_portfolio_value,
+      rank: t.rank,
+    }),
+  );
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   let portfolioWorth = 0;
-  let holdings: { companyId: string; percentage: number }[] = [];
   if (user) {
     const { data: userRow } = await supabase
       .from("users")
@@ -47,25 +58,13 @@ export default async function BenefitDetail({ params }: { params: { id: string }
       .eq("id", user.id)
       .single();
     portfolioWorth = userRow?.portfolio_worth ?? 0;
-
-    const { data: holdingsRows } = await supabase
-      .from("holdings")
-      .select("company_id, percentage")
-      .eq("user_id", user.id);
-    holdings = (holdingsRows ?? []).map(
-      (h: { company_id: string; percentage: number }) => ({
-        companyId: h.company_id,
-        percentage: h.percentage,
-      }),
-    );
   }
 
-  const progress = benefitProgress(benefit, portfolioWorth, holdings);
-
-  const thresholdCopy =
-    benefit.thresholdType === "percent"
-      ? `Hold at least ${benefit.thresholdValue}% of your portfolio in ${company.ticker}.`
-      : `Hold at least $${benefit.thresholdValue.toLocaleString()} of ${company.ticker}.`;
+  const progress = benefitProgress(benefit, portfolioWorth, tiers);
+  const requiredTier = tiers.find((t) => t.id === benefit.minTierId);
+  const tierCopy = requiredTier
+    ? `Reach ${requiredTier.name} membership (₪${requiredTier.minPortfolioValue.toLocaleString()}+ total portfolio value).`
+    : "Membership tier requirement unavailable.";
 
   return (
     <div className="min-h-screen px-6 py-16 sm:px-12 sm:py-24 max-w-3xl mx-auto">
@@ -96,7 +95,7 @@ export default async function BenefitDetail({ params }: { params: { id: string }
         <h2 className="text-sm font-medium text-foreground/60 uppercase tracking-wide">
           Terms
         </h2>
-        <p className="mt-2 text-sm text-foreground/70">{thresholdCopy}</p>
+        <p className="mt-2 text-sm text-foreground/70">{tierCopy}</p>
         <p className="mt-1 text-sm text-foreground/70">
           One-time redemption. Self-reported holdings only (v1).
         </p>
@@ -104,7 +103,7 @@ export default async function BenefitDetail({ params }: { params: { id: string }
 
       {!progress.eligible && (
         <div className="mt-8">
-          <BenefitProgressSummary progress={progress} ticker={company.ticker} />
+          <BenefitProgressSummary progress={progress} />
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import BenefitDetail from "@/app/benefits/[id]/page";
-import { benefits, companies } from "@/lib/fixtures";
+import { benefits, companies, tiers } from "@/lib/fixtures";
 import { createFakeQueryBuilder } from "@/lib/test-utils/fake-supabase-client";
 
 const notFound = vi.fn(() => {
@@ -36,8 +36,7 @@ function mockBenefitAndCompany(benefitId: string) {
               company_id: benefitRow.companyId,
               title: benefitRow.title,
               description: benefitRow.description,
-              threshold_type: benefitRow.thresholdType,
-              threshold_value: benefitRow.thresholdValue,
+              min_tier_id: benefitRow.minTierId,
             }
           : null,
         error: null,
@@ -48,6 +47,17 @@ function mockBenefitAndCompany(benefitId: string) {
         data: companyRow
           ? { id: companyRow.id, name: companyRow.name, ticker: companyRow.ticker }
           : null,
+        error: null,
+      });
+    }
+    if (table === "membership_tiers") {
+      return createFakeQueryBuilder({
+        data: tiers.map((t) => ({
+          id: t.id,
+          name: t.name,
+          min_portfolio_value: t.minPortfolioValue,
+          rank: t.rank,
+        })),
         error: null,
       });
     }

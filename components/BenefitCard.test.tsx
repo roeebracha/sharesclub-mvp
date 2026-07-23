@@ -3,14 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { BenefitCard } from "@/components/BenefitCard";
 import type { Benefit, Company } from "@/lib/eligibility";
 
-const company: Company = { id: "c1", name: "Aurora Airlines", ticker: "AURA" };
+const company: Company = { id: "c1", name: "Aurora Airlines", ticker: "AURA", sector: "aviation" };
 const benefit: Benefit = {
   id: "b1",
   companyId: "c1",
   title: "10% off any flight",
   description: "Redeem a one-time discount code.",
-  thresholdType: "percent",
-  thresholdValue: 1,
+  minTierId: "t-silver",
 };
 
 describe("BenefitCard", () => {

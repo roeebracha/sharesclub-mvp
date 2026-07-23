@@ -1,80 +1,91 @@
-# Session summary — Frontend design pass v2
+# Session summary — Roadmap item 6f: Membership tier pass
 
 ## Brainstorming / decisions before building
 
-User wanted the vibe pushed further toward "social-media, young, fun, gamified" before Phase 3
-(real Supabase wiring/auth) starts. Three concrete complaints kicked it off:
+Investigated whether the project was ready to build roadmap item 6f (Membership tier pass).
+Found `CLAUDE.md`'s "Current phase" note was stale — real Supabase auth (`lib/auth.ts`) and real
+catalog/holdings queries (`lib/catalog-data.ts`, `lib/holdings-data.ts`) already existed, with
+6 migrations applied. But the seeded catalog was still 30 fictional US companies, with no
+`membership_tiers` table, `sector` column, or `min_tier_id` — none of which matched the locked
+"real Israeli companies + general-appeal perks" and "global membership tier" decisions in
+`architecture/DECISIONS.md`.
 
-1. Progress-bar copy under each benefit was static and didn't build urgency.
-2. The share button was a boring hover strip with fake single-letter logos.
-3. `app/page.tsx` always rendered the same thin, hardcoded `demoUser` fixture.
-
-Scope expanded in discussion to also cover the flat color/background system and the header nav
-(no mobile responsiveness, no active-route indication). Explicitly **out of scope**:
-`app/dashboard`, `app/login`, `app/signup`, `app/checkout` — kept minimal on purpose, no added
-friction/gamification there.
-
-Confirmed decisions before coding: build a small `Modal.tsx` primitive (approved exception to
-"ask before adding a component library"), use a collapsing pill nav (not a drawer/bottom-tabs),
-use `react-icons` for real brand logos, per-benefit share only appears on already-eligible
-benefits, and share content must **never** show `$` amounts (percentages/achievement framing
-only) — enforced at the type level via a discriminated union, not just convention.
+Wrote a plan (approved by the user) with two explicit scope decisions:
+1. **Replace, don't layer** — the seeded catalog is fully replaced with real Israeli companies
+   (El Al, Elbit Systems, Isrotel, Yes Planet, Wix, Shufersal, etc.) across all 6 locked sectors,
+   not just tiers added on top of the old US companies.
+2. **Tier-gap-only progress copy** — since eligibility no longer depends on which company a user
+   holds, a locked benefit's progress UI shows only the ₪ gap to its required tier ("Reach Gold —
+   ₪20,000 more in portfolio value"), dropping the old per-company %/₪ framing entirely.
 
 ## Files changed
 
-- `app/globals.css`, `tailwind.config.ts` — new tokens: `surface`/`surface-elevated`,
-  `chart-1..6`/`chart-cash`, `accent-hot`, soft/elevated/glow shadows; `.bg-glow` utility built
-  with `color-mix()` so it adapts to light/dark without duplicate rules.
-- `components/PortfolioDonut.tsx` — real bug fix: hardcoded hex `COLORS` array replaced with
-  `var(--chart-N)` references, applied via `style={{ fill }}` instead of the `fill` attribute.
-- `components/ui/Card.tsx`, `components/ui/Button.tsx` — added `elevated`/glow-on-hover
-  treatment.
-- `components/Header.tsx`, `components/Header.test.tsx` — rebuilt as a collapsing pill nav with
-  active-route highlighting via `usePathname()` (client component); test mocks
-  `next/navigation` additively, new active-pill assertion added.
-- `components/ui/ProgressBar.tsx` — optional `milestones` ticks + color escalation to
-  `accent-hot` (pulsing) at ≥80%, all backward compatible.
-- `components/ui/CountUp.tsx` (new) — animated stat; guards `window.matchMedia` with a
-  `typeof === "function"` check (jsdom doesn't implement it — a real cross-environment bug,
-  not just a test artifact).
-- `components/BenefitProgressSummary.tsx` (new) — shared urgency copy ("Getting there" /
-  "Almost unlocked!") + `ProgressBar` + `CountUp`, wired into both `BenefitCard.tsx` and
-  `app/benefits/[id]/page.tsx`, replacing duplicated inline `formatPct`/progress blocks in both.
-- `components/ui/Modal.tsx` (new) — Escape/backdrop-close primitive, respects reduced motion.
-- `components/ShareCard.tsx` (new) — discriminated union (`benefit` | `portfolio` variant),
-  structurally cannot receive a `$` amount.
-- `components/ShareModal.tsx` (new) — wraps `Modal` + `ShareCard` + real brand logos
-  (`react-icons/si` for X/Instagram/Facebook/WhatsApp, `react-icons/fa6`'s `FaLinkedin` since
-  `SiLinkedin` doesn't exist in the installed `react-icons` version).
-- `components/BenefitCard.tsx` — share trigger next to Claim, eligible-only.
-- `app/page.tsx` — swapped old `ShareButton` for `ShareModal` (portfolio variant), added the
-  `.bg-glow` hero treatment.
-- `components/ShareButton.tsx` — deleted (superseded, no test locked in its API).
-- `lib/dummy-data.ts` — additively enriched: `c4`–`c7` companies, `b4`–`b8` benefits, extended
-  `demoUser.holdings`, mixing already-eligible / near-unlock (≥80%) / far-off / zero-holdings
-  states for visual variety. Existing `c1`–`c3`/`b1`–`b3`/original holdings untouched.
-- `architecture/DECISIONS.md`, `CLAUDE.md` — roadmap item 6c flipped to done, new item 6d added,
-  "Current phase" pointer updated. New **Session summary file** convention added to `CLAUDE.md`.
+**Core model**
+- `lib/eligibility.ts` — replaced the `threshold_type`/`threshold_value` gate with a tier model:
+  `MembershipTier`, `getUserTier`, `getNextTier`, `isEligible` (tier-rank comparison, ignores
+  company), `benefitProgress` (tier-gap shape), `tierProgress` (progress to next tier, Platinum
+  "highest tier reached" state). `Company` gained `sector`; `Benefit` gained `minTierId`.
+- `lib/catalog-data.ts` — `getCompanies()`/`getBenefits()` updated for the new columns; added
+  `getMembershipTiers()`.
+- `lib/fixtures.ts` — added a `tiers` fixture; companies/benefits updated to the new shape.
+- `lib/test-utils/fake-supabase-client.ts` — added a missing `.order()` chain method needed by
+  the new tier queries.
+
+**UI**
+- `components/BenefitCard.tsx` / `BenefitProgressSummary.tsx` — render tier-gap copy instead of
+  %/₪-per-company.
+- `app/benefits/[id]/page.tsx` — updated to fetch `membership_tiers` and use the new shapes
+  (not explicitly in the original plan, but a direct consequence of the type changes).
+- `components/TierBadge.tsx` (new) — tier pill + progress-to-next-tier bar, "highest tier
+  reached" state for Platinum.
+- `app/globals.css` — added `--tier-silver`/`--tier-gold`/`--tier-platinum` tokens.
+- `app/page.tsx` — added `<TierBadge>` next to the portfolio donut, a visual-only disabled
+  "Connect my investments account" button, and a sector-filter pill row (reusing `Header.tsx`'s
+  pill styling) that filters the feed before the ready/locked split.
+
+**Database** (new, append-only migrations)
+- `supabase/migrations/0007_add_membership_tiers.sql` — creates `membership_tiers` (seeded
+  Silver/Gold/Platinum), adds `companies.sector` and `benefits.min_tier_id`, drops the old
+  threshold columns, adds RLS read policy.
+- `supabase/migrations/0008_reseed_catalog_israel.sql` — deletes the old US catalog (cascades to
+  `benefits`/`holdings`), inserts 15 real Israeli companies across all 6 sectors and 30 benefits
+  spread across all 3 tiers, then a generative `do $$ ... $$` block reseeds holdings for existing
+  users (holdings-count-by-portfolio-segment pattern preserved, `portfolio_worth`/tier untouched),
+  and locks `sector`/`min_tier_id` to `NOT NULL`.
+
+**Unrelated fixes found blocking verification**
+- `components/BenefitProgressSummary.test.tsx` — one test's `getByText` matcher checked the
+  `content` argument, which Testing Library only populates from a node's *direct* text children
+  (not nested elements); since the tier name renders in a nested `<span>`, no single node's
+  `content` ever contained both the tier name and the amount. Fixed the matcher to check
+  `element.textContent` instead, with a comment explaining why (test was provably wrong given
+  how the component legitimately renders, per the repo's test-editing rule).
+- `lib/supabase/client.ts` — a pre-existing, already-in-progress singleton-client change (unrelated
+  to this session, present before it started) had `let client: ReturnType<typeof createBrowserClient>`,
+  which loses the generic default for the overloaded `createBrowserClient` and made `session`
+  implicitly `any` in `Header.tsx`, breaking `npm run build`. Fixed by typing the variable as
+  `SupabaseClient` explicitly.
+- `.env.local` — `NEXT_PUBLIC_SUPABASE_ANON_KEY` was set to a `sb_secret_...` **secret** key
+  instead of the anon/publishable key, so Supabase's browser client rejected every auth call
+  ("Forbidden use of secret API key in browser"), blocking login/signup entirely. Flagged to the
+  user and fixed (with permission) by swapping in the project's actual anon key.
+- Stray duplicate `node_modules` folders (`jsdom 2`, `xml-name-validator 2`, `@types/aria-query 2`,
+  `@types/estree 2` — empty, permission-locked artifacts, unrelated to any dependency change)
+  were causing intermittent `npm run build` type-check failures; removed (safely regenerable via
+  `npm install`, not version-controlled).
 
 ## Tests run
 
-- `components/ui/primitives.test.tsx` — 3 new `ProgressBar` tests added (milestone ticks, hot
-  color at ≥80%, regular color below 80%); existing tests untouched.
-- `components/BenefitProgressSummary.test.tsx` (new) — 4 tests: no badge <50%, "Getting there"
-  50–79%, "Almost unlocked!" ≥80%, full copy content assertion.
-- `components/ui/Modal.test.tsx` (new) — 5 tests: closed renders nothing, open renders content,
-  backdrop click closes, inner click doesn't close, Escape closes.
-- `components/ShareCard.test.tsx` (new) — 3 tests including a regression guard asserting
-  rendered output never contains `$`.
-- `components/ShareModal.test.tsx` (new) — 3 tests: dialog hidden until trigger click, correct
-  `ShareCard` variant rendered per trigger.
-- `components/Header.test.tsx` — extended with an active-pill class assertion; existing 3
-  link/href tests unmodified.
-- Full suite (`app/page.test.tsx`, `app/benefits/[id]/page.test.tsx`,
-  `lib/dummy-data.test.ts`, `lib/benefit-progress.test.ts`, `app/auth-pages.test.tsx`) confirmed
-  green after each build step — no existing test was edited to force a pass.
-- `npx tsc --noEmit` clean (two pre-existing `node_modules` type-definition warnings unrelated
-  to any change here, confirmed via inspection).
-- Manual visual verification via Claude Preview: light/dark mode, mobile nav collapse, donut
-  colors, hot progress bar pulse, share modal (real logos, no `$` shown) — no console/server
-  errors.
+- `npm run test` (Vitest): 16 files, 87 tests, all green — including rewritten
+  `lib/eligibility.test.ts`, `lib/benefit-progress.test.ts`, `app/page.test.tsx` (new sector-filter
+  test + updated locked-benefit tier-gap assertion), `app/benefits/[id]/page.test.tsx`,
+  `components/BenefitCard.test.tsx`, `components/BenefitProgressSummary.test.tsx`.
+- `npm run build`: clean, no TypeScript errors.
+- Migrations `0007`/`0008` applied to the live Supabase project via MCP; confirmed via SQL
+  (15 companies, 30 benefits, 3 tiers, holdings reseeded for all existing users).
+- Live visual verification via `preview_start`/`preview_screenshot`: signed up a fresh test
+  account (deleted afterward), confirmed on `/` — Silver-tier badge with correct ₪ gap to Gold,
+  disabled "Connect my investments account" button, working sector-filter pills (verified
+  Security correctly isolates Elbit Systems/IAI), Israeli company benefit cards, and locked
+  benefits rendering the new tier-gap copy ("Reach Gold — ₪20,000 more in portfolio value",
+  "Reach Platinum — ₪50,000 more in portfolio value").

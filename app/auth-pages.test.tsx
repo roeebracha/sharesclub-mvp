@@ -6,9 +6,10 @@ import Signup from "@/app/signup/page";
 import Checkout from "@/app/checkout/page";
 
 const push = vi.fn();
+const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
+  useRouter: () => ({ push, refresh }),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -42,6 +43,7 @@ describe("Login page", () => {
     await waitFor(() => {
       expect(signIn).toHaveBeenCalledWith("jane@example.com", "password123");
       expect(push).toHaveBeenCalledWith("/");
+      expect(refresh).toHaveBeenCalled();
     });
   });
 
@@ -82,6 +84,7 @@ describe("Signup page", () => {
     await waitFor(() => {
       expect(signUp).toHaveBeenCalledWith("jane@example.com", "password123", "Jane Investor");
       expect(push).toHaveBeenCalledWith("/");
+      expect(refresh).toHaveBeenCalled();
     });
   });
 

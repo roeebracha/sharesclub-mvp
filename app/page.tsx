@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 import { BenefitCard } from "@/components/BenefitCard";
 import { PortfolioDonut } from "@/components/PortfolioDonut";
+import { TierBadge } from "@/components/TierBadge";
 import { ShareModal } from "@/components/ShareModal";
 import { Button } from "@/components/ui/Button";
 import {
@@ -11,31 +12,48 @@ import {
   type Benefit,
   type Company,
   type Holding,
+  type MembershipTier,
+  type Sector,
 } from "@/lib/eligibility";
-import { getCompanies, getBenefits } from "@/lib/catalog-data";
+import { getCompanies, getBenefits, getMembershipTiers } from "@/lib/catalog-data";
 import { getHoldings, getPortfolioWorth } from "@/lib/holdings-data";
 import { getCurrentUser } from "@/lib/auth";
+
+const SECTOR_LABELS: Record<Sector, string> = {
+  security: "Security",
+  aviation: "Aviation",
+  tourism: "Tourism",
+  leisure_entertainment: "Leisure & Entertainment",
+  technology: "Technology",
+  retail: "Retail",
+};
 
 export default function Home() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [portfolioWorth, setPortfolioWorth] = useState(0);
   const [userName, setUserName] = useState<string | null>(null);
+  const [sectorFilter, setSectorFilter] = useState<Sector | "all">("all");
 
   useEffect(() => {
     getCompanies().then(setCompanies);
     getBenefits().then(setBenefits);
+    getMembershipTiers().then(setTiers);
     getHoldings().then(setHoldings);
     getPortfolioWorth().then(setPortfolioWorth);
     getCurrentUser().then((user) => setUserName(user?.name ?? null));
   }, []);
 
+  const sectorsPresent = Array.from(new Set(companies.map((c) => c.sector)));
+
   const items = benefits
     .map((benefit) => {
       const company = companies.find((c) => c.id === benefit.companyId);
       if (!company) return null;
-      const progress = benefitProgress(benefit, portfolioWorth, holdings);
+      if (sectorFilter !== "all" && company.sector !== sectorFilter) return null;
+      const progress = benefitProgress(benefit, portfolioWorth, tiers);
       return { benefit, company, progress };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -74,13 +92,45 @@ export default function Home() {
           companies={companies}
           portfolioWorth={portfolioWorth}
         />
-        <ShareModal
-          variant="portfolio"
-          unlockedCount={ready.length}
-          totalCount={items.length}
-          trigger={<Button variant="primary">Share your progress</Button>}
-        />
+        <TierBadge portfolioWorth={portfolioWorth} tiers={tiers} />
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <ShareModal
+            variant="portfolio"
+            unlockedCount={ready.length}
+            totalCount={items.length}
+            trigger={<Button variant="primary">Share your progress</Button>}
+          />
+          <Button variant="secondary" disabled>
+            Connect my investments account
+          </Button>
+        </div>
       </section>
+
+      <div className="mb-8 flex flex-wrap items-center gap-0.5 rounded-full bg-black/5 p-1 text-sm dark:bg-white/5 sm:gap-1">
+        <button
+          onClick={() => setSectorFilter("all")}
+          className={`rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
+            sectorFilter === "all"
+              ? "bg-primary text-white"
+              : "text-foreground/60 hover:text-foreground"
+          }`}
+        >
+          All
+        </button>
+        {sectorsPresent.map((sector) => (
+          <button
+            key={sector}
+            onClick={() => setSectorFilter(sector)}
+            className={`rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
+              sectorFilter === sector
+                ? "bg-primary text-white"
+                : "text-foreground/60 hover:text-foreground"
+            }`}
+          >
+            {SECTOR_LABELS[sector]}
+          </button>
+        ))}
+      </div>
 
       <main className="grid gap-12">
         <section>

@@ -4,23 +4,13 @@ import { CountUp } from "@/components/ui/CountUp";
 
 const MILESTONES = [0.5, 0.8];
 
-function formatPct(n: number) {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1);
-}
-
 function urgencyLabel(progressRatio: number): string | null {
   if (progressRatio >= 0.8) return "Almost unlocked!";
   if (progressRatio >= 0.5) return "Getting there";
   return null;
 }
 
-export function BenefitProgressSummary({
-  progress,
-  ticker,
-}: {
-  progress: BenefitProgress;
-  ticker: string;
-}) {
+export function BenefitProgressSummary({ progress }: { progress: BenefitProgress }) {
   const label = urgencyLabel(progress.progressRatio);
 
   return (
@@ -37,8 +27,8 @@ export function BenefitProgressSummary({
       </div>
       <ProgressBar value={progress.progressRatio} milestones={MILESTONES} />
       <p className="mt-2 text-xs text-foreground/60">
-        Need {formatPct(progress.missingPercentagePoints)}% more (~$
-        {Math.round(progress.missingAmount).toLocaleString()}) in {ticker}
+        Reach <span className="font-medium text-foreground/80">{progress.requiredTierName}</span>{" "}
+        — ₪{Math.round(progress.amountToRequiredTier).toLocaleString()} more in portfolio value
       </p>
     </div>
   );
