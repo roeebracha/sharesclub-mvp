@@ -41,7 +41,7 @@ export function BenefitCard({
 
       {progress && !eligible && (
         <div className="mt-4">
-          <BenefitProgressSummary progress={progress} ticker={company.ticker} />
+          <BenefitProgressSummary progress={progress} />
         </div>
       )}
 

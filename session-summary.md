@@ -1,67 +1,91 @@
-# Session summary — Fix login → feed transition & page separation
+# Session summary — Roadmap item 6f: Membership tier pass
 
 ## Brainstorming / decisions before building
 
-User reported: after logging in, the login page didn't disappear — they expected to land
-straight on the feed, with a nav clearly showing feed / portfolio editing / log out once
-authenticated.
+Investigated whether the project was ready to build roadmap item 6f (Membership tier pass).
+Found `CLAUDE.md`'s "Current phase" note was stale — real Supabase auth (`lib/auth.ts`) and real
+catalog/holdings queries (`lib/catalog-data.ts`, `lib/holdings-data.ts`) already existed, with
+6 migrations applied. But the seeded catalog was still 30 fictional US companies, with no
+`membership_tiers` table, `sector` column, or `min_tier_id` — none of which matched the locked
+"real Israeli companies + general-appeal perks" and "global membership tier" decisions in
+`architecture/DECISIONS.md`.
 
-Investigated with two parallel Explore agents (one on the login/auth redirect flow, one on the
-Header/nav structure) plus direct reads of the implicated files. Found two real, compounding bugs
-— not a missing feature, since the feed/Dashboard/Log-out nav already existed in `Header.tsx`:
-
-1. `components/Header.tsx` rendered on every route via `app/layout.tsx`, including `/login` and
-   `/signup` — no clean chrome separation between the auth pages and the authenticated app.
-2. Because Header (with its always-present `Home` link to `/`) rendered on `/login`, Next.js
-   would prefetch `/` while still unauthenticated; middleware redirects that prefetch back to
-   `/login`, and the client Router Cache could then serve that stale/negative result back when
-   `app/login/page.tsx` called `router.push("/")` after a successful sign-in — since neither
-   `signIn`/`signUp` nor the calling pages ever called `router.refresh()`, nothing forced a fresh
-   Server-Component fetch of `/` with the new session cookie. This is the standard cause of
-   "auth succeeded but the old page is still showing" in Next.js App Router + Supabase SSR.
-
-Confirmed via code reading only (not live reproduction) — flagged explicitly to the user as a
-diagnosis, not a guaranteed root cause, since browser verification wasn't available this session
-(see below). No `architecture/DECISIONS.md` items were implicated; this was scoped as a bug fix,
-not a product decision. `app/checkout/page.tsx` also renders Header today but wasn't touched —
-out of scope, not mentioned by the user and not behind auth.
+Wrote a plan (approved by the user) with two explicit scope decisions:
+1. **Replace, don't layer** — the seeded catalog is fully replaced with real Israeli companies
+   (El Al, Elbit Systems, Isrotel, Yes Planet, Wix, Shufersal, etc.) across all 6 locked sectors,
+   not just tiers added on top of the old US companies.
+2. **Tier-gap-only progress copy** — since eligibility no longer depends on which company a user
+   holds, a locked benefit's progress UI shows only the ₪ gap to its required tier ("Reach Gold —
+   ₪20,000 more in portfolio value"), dropping the old per-company %/₪ framing entirely.
 
 ## Files changed
 
-- `components/Header.tsx` — added an early return (`if (pathname === "/login" || pathname ===
-  "/signup") return null;`) after the existing hooks, so Header renders nothing on the two auth
-  pages. Consistent with Header's existing pathname-branching pattern (already used for
-  active-pill state); `app/layout.tsx` itself untouched.
-- `app/login/page.tsx`, `app/signup/page.tsx` — added `router.refresh()` immediately after the
-  existing `router.push("/")` on successful sign-in/sign-up, forcing Next.js to refetch Server
-  Component data for `/` with the current session cookie instead of potentially reusing a cached
-  pre-auth render.
-- `components/Header.test.tsx` — `usePathname` mock changed from a static return to a
-  `vi.fn()` so individual tests can override the pathname; 2 new tests added (Header renders
-  nothing on `/login`, same for `/signup`). Existing 3 tests unmodified.
-- `app/auth-pages.test.tsx` — `useRouter` mock extended with a `refresh` spy; the two existing
-  "redirects to / on success" tests (login and signup) extended to also assert `refresh` was
-  called. No existing assertion weakened or removed.
+**Core model**
+- `lib/eligibility.ts` — replaced the `threshold_type`/`threshold_value` gate with a tier model:
+  `MembershipTier`, `getUserTier`, `getNextTier`, `isEligible` (tier-rank comparison, ignores
+  company), `benefitProgress` (tier-gap shape), `tierProgress` (progress to next tier, Platinum
+  "highest tier reached" state). `Company` gained `sector`; `Benefit` gained `minTierId`.
+- `lib/catalog-data.ts` — `getCompanies()`/`getBenefits()` updated for the new columns; added
+  `getMembershipTiers()`.
+- `lib/fixtures.ts` — added a `tiers` fixture; companies/benefits updated to the new shape.
+- `lib/test-utils/fake-supabase-client.ts` — added a missing `.order()` chain method needed by
+  the new tier queries.
+
+**UI**
+- `components/BenefitCard.tsx` / `BenefitProgressSummary.tsx` — render tier-gap copy instead of
+  %/₪-per-company.
+- `app/benefits/[id]/page.tsx` — updated to fetch `membership_tiers` and use the new shapes
+  (not explicitly in the original plan, but a direct consequence of the type changes).
+- `components/TierBadge.tsx` (new) — tier pill + progress-to-next-tier bar, "highest tier
+  reached" state for Platinum.
+- `app/globals.css` — added `--tier-silver`/`--tier-gold`/`--tier-platinum` tokens.
+- `app/page.tsx` — added `<TierBadge>` next to the portfolio donut, a visual-only disabled
+  "Connect my investments account" button, and a sector-filter pill row (reusing `Header.tsx`'s
+  pill styling) that filters the feed before the ready/locked split.
+
+**Database** (new, append-only migrations)
+- `supabase/migrations/0007_add_membership_tiers.sql` — creates `membership_tiers` (seeded
+  Silver/Gold/Platinum), adds `companies.sector` and `benefits.min_tier_id`, drops the old
+  threshold columns, adds RLS read policy.
+- `supabase/migrations/0008_reseed_catalog_israel.sql` — deletes the old US catalog (cascades to
+  `benefits`/`holdings`), inserts 15 real Israeli companies across all 6 sectors and 30 benefits
+  spread across all 3 tiers, then a generative `do $$ ... $$` block reseeds holdings for existing
+  users (holdings-count-by-portfolio-segment pattern preserved, `portfolio_worth`/tier untouched),
+  and locks `sector`/`min_tier_id` to `NOT NULL`.
+
+**Unrelated fixes found blocking verification**
+- `components/BenefitProgressSummary.test.tsx` — one test's `getByText` matcher checked the
+  `content` argument, which Testing Library only populates from a node's *direct* text children
+  (not nested elements); since the tier name renders in a nested `<span>`, no single node's
+  `content` ever contained both the tier name and the amount. Fixed the matcher to check
+  `element.textContent` instead, with a comment explaining why (test was provably wrong given
+  how the component legitimately renders, per the repo's test-editing rule).
+- `lib/supabase/client.ts` — a pre-existing, already-in-progress singleton-client change (unrelated
+  to this session, present before it started) had `let client: ReturnType<typeof createBrowserClient>`,
+  which loses the generic default for the overloaded `createBrowserClient` and made `session`
+  implicitly `any` in `Header.tsx`, breaking `npm run build`. Fixed by typing the variable as
+  `SupabaseClient` explicitly.
+- `.env.local` — `NEXT_PUBLIC_SUPABASE_ANON_KEY` was set to a `sb_secret_...` **secret** key
+  instead of the anon/publishable key, so Supabase's browser client rejected every auth call
+  ("Forbidden use of secret API key in browser"), blocking login/signup entirely. Flagged to the
+  user and fixed (with permission) by swapping in the project's actual anon key.
+- Stray duplicate `node_modules` folders (`jsdom 2`, `xml-name-validator 2`, `@types/aria-query 2`,
+  `@types/estree 2` — empty, permission-locked artifacts, unrelated to any dependency change)
+  were causing intermittent `npm run build` type-check failures; removed (safely regenerable via
+  `npm install`, not version-controlled).
 
 ## Tests run
 
-- New/extended tests written first, confirmed **red** against the unmodified code (4 failing
-  assertions), then confirmed **green** after the two source fixes — no test was edited to force
-  a pass.
-- Full suite (`npx vitest run`): 15 files, 81 tests, all green.
-- `npx tsc --noEmit`: clean except the same two pre-existing `node_modules` type-definition
-  warnings (`aria-query 2`, `estree 2`) noted in prior session summaries — unrelated to this
-  change.
-
-## Verification not completed this session
-
-Same constraint as the prior responsive-mobile-pass session: `/` and `/dashboard` sit behind the
-auth middleware, and no test credentials were available, so the actual login → feed transition
-was **not** verified live in a browser. The `router.refresh()` fix is the standard, well-
-established pattern for this class of bug, but it's a diagnosis from static code reading, not a
-confirmed-fixed live repro. Before merging, please manually verify:
-
-- Logging in from `/login` lands cleanly on `/` with no visible login form afterward.
-- `/login` and `/signup` no longer show the app header/nav.
-- The authenticated nav (Home / Dashboard / Log out) appears correctly on `/` and `/dashboard`
-  after login.
+- `npm run test` (Vitest): 16 files, 87 tests, all green — including rewritten
+  `lib/eligibility.test.ts`, `lib/benefit-progress.test.ts`, `app/page.test.tsx` (new sector-filter
+  test + updated locked-benefit tier-gap assertion), `app/benefits/[id]/page.test.tsx`,
+  `components/BenefitCard.test.tsx`, `components/BenefitProgressSummary.test.tsx`.
+- `npm run build`: clean, no TypeScript errors.
+- Migrations `0007`/`0008` applied to the live Supabase project via MCP; confirmed via SQL
+  (15 companies, 30 benefits, 3 tiers, holdings reseeded for all existing users).
+- Live visual verification via `preview_start`/`preview_screenshot`: signed up a fresh test
+  account (deleted afterward), confirmed on `/` — Silver-tier badge with correct ₪ gap to Gold,
+  disabled "Connect my investments account" button, working sector-filter pills (verified
+  Security correctly isolates Elbit Systems/IAI), Israeli company benefit cards, and locked
+  benefits rendering the new tier-gap copy ("Reach Gold — ₪20,000 more in portfolio value",
+  "Reach Platinum — ₪50,000 more in portfolio value").
