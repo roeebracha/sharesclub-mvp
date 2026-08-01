@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { signOut } from "@/lib/auth";
+import { signOut } from "@/features/auth/data/auth";
 
 export function Header() {
   const pathname = usePathname() ?? "";

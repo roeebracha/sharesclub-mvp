@@ -2,23 +2,20 @@
 
 import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
-import { BenefitCard } from "@/components/BenefitCard";
-import { PortfolioDonut } from "@/components/PortfolioDonut";
-import { TierBadge } from "@/components/TierBadge";
+import { BenefitCard } from "@/features/benefits/components/BenefitCard";
+import { PortfolioDonut } from "@/features/portfolio/components/PortfolioDonut";
+import { TierBadge } from "@/features/portfolio/components/TierBadge";
 import { ShareModal } from "@/components/ShareModal";
 import { Button } from "@/components/ui/Button";
 import {
   benefitProgress,
+  israeliExposure,
   type Benefit,
   type Company,
   type Holding,
   type MembershipTier,
   type Sector,
-} from "@/lib/eligibility";
-import { getCompanies, getBenefits, getMembershipTiers } from "@/lib/catalog-data";
-import { getHoldings, getPortfolioWorth } from "@/lib/holdings-data";
-import { getCurrentUser } from "@/lib/auth";
-
+} from "@/lib/domain/eligibility";
 const SECTOR_LABELS: Record<Sector, string> = {
   security: "Security",
   aviation: "Aviation",
@@ -27,6 +24,10 @@ const SECTOR_LABELS: Record<Sector, string> = {
   technology: "Technology",
   retail: "Retail",
 };
+
+import { getCompanies, getBenefits, getMembershipTiers } from "@/features/benefits/data/catalog-client";
+import { getHoldings, getPortfolioWorth } from "@/features/portfolio/data/holdings";
+import { getCurrentUser } from "@/features/auth/data/auth";
 
 export default function Home() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -47,13 +48,14 @@ export default function Home() {
   }, []);
 
   const sectorsPresent = Array.from(new Set(companies.map((c) => c.sector)));
+  const exposure = israeliExposure(holdings);
 
   const items = benefits
     .map((benefit) => {
       const company = companies.find((c) => c.id === benefit.companyId);
       if (!company) return null;
       if (sectorFilter !== "all" && company.sector !== sectorFilter) return null;
-      const progress = benefitProgress(benefit, portfolioWorth, tiers);
+      const progress = benefitProgress(benefit, portfolioWorth, tiers, exposure);
       return { benefit, company, progress };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);

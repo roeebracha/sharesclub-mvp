@@ -16,7 +16,7 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-import { signUp, signIn, signOut, getCurrentUser } from "@/lib/auth";
+import { signUp, signIn, signOut, getCurrentUser } from "@/features/auth/data/auth";
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -1,16 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import BenefitDetail from "@/app/benefits/[id]/page";
-import { benefits, companies, tiers } from "@/lib/fixtures";
-import { createFakeQueryBuilder } from "@/lib/test-utils/fake-supabase-client";
+import { benefits, companies, tiers } from "@/lib/test-utils/fixtures";
 
 const notFound = vi.fn(() => {
   throw new Error("notFound called");
 });
 vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
 
+const getBenefitById = vi.fn();
+const getCompanyById = vi.fn();
+const getMembershipTiers = vi.fn();
+
+vi.mock("@/features/benefits/data/catalog-server", () => ({
+  getBenefitById: (id: string) => getBenefitById(id),
+  getCompanyById: (id: string) => getCompanyById(id),
+  getMembershipTiers: () => getMembershipTiers(),
+}));
+
 const fakeClient = {
-  from: vi.fn(),
   auth: { getUser: vi.fn() },
 };
 
@@ -21,48 +29,14 @@ vi.mock("@/lib/supabase/server", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   fakeClient.auth.getUser.mockResolvedValue({ data: { user: null } });
+  getMembershipTiers.mockResolvedValue(tiers);
 });
 
 function mockBenefitAndCompany(benefitId: string) {
-  const benefitRow = benefits.find((b) => b.id === benefitId);
-  const companyRow = benefitRow ? companies.find((c) => c.id === benefitRow.companyId) : null;
-
-  fakeClient.from.mockImplementation((table: string) => {
-    if (table === "benefits") {
-      return createFakeQueryBuilder({
-        data: benefitRow
-          ? {
-              id: benefitRow.id,
-              company_id: benefitRow.companyId,
-              title: benefitRow.title,
-              description: benefitRow.description,
-              min_tier_id: benefitRow.minTierId,
-            }
-          : null,
-        error: null,
-      });
-    }
-    if (table === "companies") {
-      return createFakeQueryBuilder({
-        data: companyRow
-          ? { id: companyRow.id, name: companyRow.name, ticker: companyRow.ticker }
-          : null,
-        error: null,
-      });
-    }
-    if (table === "membership_tiers") {
-      return createFakeQueryBuilder({
-        data: tiers.map((t) => ({
-          id: t.id,
-          name: t.name,
-          min_portfolio_value: t.minPortfolioValue,
-          rank: t.rank,
-        })),
-        error: null,
-      });
-    }
-    return createFakeQueryBuilder({ data: null, error: null });
-  });
+  const benefit = benefits.find((b) => b.id === benefitId) ?? null;
+  const company = benefit ? (companies.find((c) => c.id === benefit.companyId) ?? null) : null;
+  getBenefitById.mockResolvedValue(benefit);
+  getCompanyById.mockResolvedValue(company);
 }
 
 describe("BenefitDetail", () => {

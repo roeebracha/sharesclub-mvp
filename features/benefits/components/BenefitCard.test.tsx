@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BenefitCard } from "@/components/BenefitCard";
-import type { Benefit, Company } from "@/lib/eligibility";
+import { BenefitCard } from "@/features/benefits/components/BenefitCard";
+import type { Benefit, Company } from "@/lib/domain/eligibility";
 
 const company: Company = { id: "c1", name: "Aurora Airlines", ticker: "AURA", sector: "aviation" };
 const benefit: Benefit = {

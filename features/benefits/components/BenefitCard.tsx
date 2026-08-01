@@ -1,9 +1,9 @@
 import Link from "next/link";
-import type { Benefit, BenefitProgress, Company } from "@/lib/eligibility";
+import type { Benefit, BenefitProgress, Company } from "@/lib/domain/eligibility";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { BenefitProgressSummary } from "@/components/BenefitProgressSummary";
+import { BenefitProgressSummary } from "@/features/benefits/components/BenefitProgressSummary";
 import { ShareModal } from "@/components/ShareModal";
 
 export function BenefitCard({

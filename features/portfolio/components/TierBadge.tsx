@@ -1,4 +1,4 @@
-import { tierProgress, type MembershipTier } from "@/lib/eligibility";
+import { tierProgress, type MembershipTier } from "@/lib/domain/eligibility";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountUp } from "@/components/ui/CountUp";
 

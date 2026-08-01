@@ -12,12 +12,12 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, refresh }),
 }));
 
-vi.mock("@/lib/auth", () => ({
+vi.mock("@/features/auth/data/auth", () => ({
   signIn: vi.fn(),
   signUp: vi.fn(),
 }));
 
-import { signIn, signUp } from "@/lib/auth";
+import { signIn, signUp } from "@/features/auth/data/auth";
 
 beforeEach(() => {
   vi.clearAllMocks();

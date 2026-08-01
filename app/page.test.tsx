@@ -1,25 +1,25 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import Home from "@/app/page";
-import { benefitProgress } from "@/lib/eligibility";
-import { benefits, companies, tiers, demoUser } from "@/lib/fixtures";
+import { benefitProgress, israeliExposure } from "@/lib/domain/eligibility";
+import { benefits, companies, tiers, demoUser } from "@/lib/test-utils/fixtures";
 
 // canvas-confetti touches the DOM/canvas; it's only called on click, but stub
 // it so importing the page never trips over jsdom's missing canvas support.
 vi.mock("canvas-confetti", () => ({ default: vi.fn() }));
 
-vi.mock("@/lib/catalog-data", () => ({
+vi.mock("@/features/benefits/data/catalog-client", () => ({
   getCompanies: vi.fn(() => Promise.resolve(companies)),
   getBenefits: vi.fn(() => Promise.resolve(benefits)),
   getMembershipTiers: vi.fn(() => Promise.resolve(tiers)),
 }));
 
-vi.mock("@/lib/holdings-data", () => ({
+vi.mock("@/features/portfolio/data/holdings", () => ({
   getHoldings: vi.fn(() => Promise.resolve(demoUser.holdings)),
   getPortfolioWorth: vi.fn(() => Promise.resolve(demoUser.portfolioWorth)),
 }));
 
-vi.mock("@/lib/auth", () => ({
+vi.mock("@/features/auth/data/auth", () => ({
   getCurrentUser: vi.fn(() =>
     Promise.resolve({ id: "u1", email: "jane@example.com", name: "Jane" }),
   ),
@@ -51,7 +51,12 @@ describe("Home", () => {
   it("shows tier-gap progress copy for a locked benefit", async () => {
     render(<Home />);
     const beautyBox = benefits.find((b) => b.id === "b6")!; // Platinum-gated
-    const p = benefitProgress(beautyBox, demoUser.portfolioWorth, tiers);
+    const p = benefitProgress(
+      beautyBox,
+      demoUser.portfolioWorth,
+      tiers,
+      israeliExposure(demoUser.holdings),
+    );
     const amount = Math.round(p.amountToRequiredTier).toLocaleString();
 
     expect(

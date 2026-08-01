@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { BenefitProgressSummary } from "@/components/BenefitProgressSummary";
-import type { BenefitProgress } from "@/lib/eligibility";
+import { BenefitProgressSummary } from "@/features/benefits/components/BenefitProgressSummary";
+import type { BenefitProgress } from "@/lib/domain/eligibility";
 
 function progress(overrides: Partial<BenefitProgress>): BenefitProgress {
   return {
