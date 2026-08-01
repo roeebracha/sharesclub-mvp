@@ -55,8 +55,10 @@ export function PortfolioDonut({
   const slices: Slice[] = holdings.map((h, i) => {
     const company = companies.find((c) => c.id === h.companyId);
     return {
-      label: company?.name ?? "Unknown",
-      ticker: company?.ticker ?? "—",
+      // Prefer the catalog match; fall back to what an imported file actually said (most
+      // real holdings won't match the curated catalog — see DECISIONS.md) before "Unknown".
+      label: company?.name ?? h.rawName ?? "Unknown",
+      ticker: company?.ticker ?? h.ticker ?? "—",
       percentage: h.percentage,
       value: (h.percentage / 100) * portfolioWorth,
       color: COLORS[i % COLORS.length],
@@ -95,6 +97,7 @@ export function PortfolioDonut({
         {slices.map((slice, i) => (
           <motion.path
             key={slice.ticker}
+            data-testid={`donut-slice-${slice.ticker}`}
             d={arcPath(arcs[i].a0, arcs[i].a1)}
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -107,6 +110,9 @@ export function PortfolioDonut({
             style={{ fill: slice.color, cursor: "grab" }}
             onHoverStart={() => setActive(i)}
             onHoverEnd={() => setActive(null)}
+            // Hover has no touch equivalent — tap toggles the same info state so
+            // mobile/touch users can reveal it too (mobile-first rule, DESIGN.md).
+            onClick={() => setActive((prev) => (prev === i ? null : i))}
           />
         ))}
       </svg>

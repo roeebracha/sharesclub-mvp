@@ -32,7 +32,9 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen px-6 py-16 sm:px-12 sm:py-24 max-w-md mx-auto">
+    <div className="relative min-h-screen px-6 py-16 sm:px-12 sm:py-24 max-w-md mx-auto">
+      <div className="bg-glow pointer-events-none absolute inset-0 -z-10" aria-hidden />
+
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
         Create your account
       </h1>
@@ -40,7 +42,7 @@ export default function Signup() {
         Start claiming perks for the shares you already hold.
       </p>
 
-      <Card className="mt-8">
+      <Card variant="elevated" className="mt-8">
         <form onSubmit={handleSubmit} className="grid gap-4">
           <label className="grid gap-1.5">
             <span className="text-sm text-foreground/70">Name</span>

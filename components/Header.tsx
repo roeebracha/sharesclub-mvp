@@ -33,15 +33,20 @@ export function Header() {
 
   const navItems = [
     { href: "/", label: "Home" },
-    ...(loggedIn ? [{ href: "/dashboard", label: "Dashboard" } as const] : []),
+    ...(loggedIn
+      ? [
+          { href: "/dashboard", label: "Dashboard" } as const,
+          { href: "/import", label: "Import" } as const,
+        ]
+      : []),
   ];
 
   return (
     <header className="border-b border-black/10 dark:border-white/15">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4 sm:px-12">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4 sm:flex-nowrap sm:px-12">
         <Link
           href="/"
-          className="font-[family-name:var(--font-geist-mono)] text-lg font-bold tracking-tight sm:text-xl"
+          className="whitespace-nowrap font-[family-name:var(--font-geist-mono)] text-lg font-bold tracking-tight sm:text-xl"
         >
           Shares<span className="text-primary">Club</span>
         </Link>
@@ -52,7 +57,7 @@ export function Header() {
               <Link
                 key={href}
                 href={href}
-                className={`rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
+                className={`whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
                   active
                     ? "bg-primary text-white"
                     : "text-foreground/60 hover:text-foreground"
@@ -65,14 +70,14 @@ export function Header() {
           {loggedIn ? (
             <button
               onClick={handleLogout}
-              className="rounded-full px-2.5 py-1.5 text-foreground/60 transition-colors hover:text-foreground sm:px-3"
+              className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-foreground/60 transition-colors hover:text-foreground sm:px-3"
             >
               Log out
             </button>
           ) : (
             <Link
               href="/login"
-              className={`rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
+              className={`whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
                 pathname === "/login"
                   ? "bg-primary text-white"
                   : "text-foreground/60 hover:text-foreground"
