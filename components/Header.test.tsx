@@ -22,7 +22,7 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-vi.mock("@/lib/auth", () => ({
+vi.mock("@/features/auth/data/auth", () => ({
   signOut: vi.fn(),
 }));
 

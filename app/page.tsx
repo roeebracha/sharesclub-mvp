@@ -16,15 +16,7 @@ import {
   type MembershipTier,
   type Sector,
 } from "@/lib/domain/eligibility";
-const SECTOR_LABELS: Record<Sector, string> = {
-  security: "Security",
-  aviation: "Aviation",
-  tourism: "Tourism",
-  leisure_entertainment: "Leisure & Entertainment",
-  technology: "Technology",
-  retail: "Retail",
-};
-
+import { SECTOR_LABELS } from "@/features/benefits/components/sector-meta";
 import { getCompanies, getBenefits, getMembershipTiers } from "@/features/benefits/data/catalog-client";
 import { getHoldings, getPortfolioWorth } from "@/features/portfolio/data/holdings";
 import { getCurrentUser } from "@/features/auth/data/auth";
@@ -94,7 +86,7 @@ export default function Home() {
           companies={companies}
           portfolioWorth={portfolioWorth}
         />
-        <TierBadge portfolioWorth={portfolioWorth} tiers={tiers} />
+        <TierBadge portfolioWorth={portfolioWorth} tiers={tiers} benefits={benefits} />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <ShareModal
             variant="portfolio"
