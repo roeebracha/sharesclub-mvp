@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Company, Holding } from "@/lib/eligibility";
-import { getCompanies } from "@/lib/catalog-data";
+import type { Company, Holding } from "@/lib/domain/eligibility";
+import { getCompanies } from "@/features/benefits/data/catalog-client";
 import {
   addHolding,
   deleteHolding,
@@ -10,7 +10,7 @@ import {
   getPortfolioWorth,
   setPortfolioWorth as savePortfolioWorth,
   updateHolding,
-} from "@/lib/holdings-data";
+} from "@/features/portfolio/data/holdings";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
@@ -154,12 +154,14 @@ export default function DashboardPage() {
         <div className="grid gap-3">
           {holdings.map((holding) => {
             const company = companies.find((c) => c.id === holding.companyId);
+            // Manual add/edit is company-based — a file-imported, unmatched holding (companyId
+            // null) has nothing to edit here and isn't shown in this list.
             if (!company) return null;
-            const isEditing = editingId === holding.companyId;
+            const isEditing = editingId === company.id;
             return (
               <Card
-                key={holding.companyId}
-                className="flex items-center justify-between gap-4 p-4"
+                key={company.id}
+                className="flex flex-wrap items-center justify-between gap-4 p-4"
               >
                 <span className="text-sm font-medium">
                   {company.name}{" "}
@@ -167,7 +169,7 @@ export default function DashboardPage() {
                 </span>
 
                 {isEditing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Input
                       type="number"
                       min="0"
@@ -177,7 +179,7 @@ export default function DashboardPage() {
                       className="w-20 px-2 py-1"
                     />
                     <button
-                      onClick={() => handleSaveEdit(holding.companyId)}
+                      onClick={() => handleSaveEdit(company.id)}
                       className="text-xs underline underline-offset-4"
                     >
                       Save
@@ -190,7 +192,7 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm">{holding.percentage}%</span>
                     <button
                       onClick={() => startEditing(holding)}
@@ -199,7 +201,7 @@ export default function DashboardPage() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(holding.companyId)}
+                      onClick={() => handleDelete(company.id)}
                       className="text-xs text-danger underline underline-offset-4"
                     >
                       Delete

@@ -1,51 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { benefitProgress, type Benefit, type MembershipTier } from "@/lib/eligibility";
+import { benefitProgress, israeliExposure } from "@/lib/domain/eligibility";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { BenefitProgressSummary } from "@/components/BenefitProgressSummary";
+import { BenefitProgressSummary } from "@/features/benefits/components/BenefitProgressSummary";
+import {
+  getBenefitById,
+  getCompanyById,
+  getMembershipTiers,
+} from "@/features/benefits/data/catalog-server";
+import { getHoldingsForCurrentUser } from "@/features/portfolio/data/holdings-server";
 
 export default async function BenefitDetail({ params }: { params: { id: string } }) {
+  const benefit = await getBenefitById(params.id);
+  if (!benefit) notFound();
+
+  const company = (await getCompanyById(benefit.companyId))!;
+  const tiers = await getMembershipTiers();
+
   const supabase = await createClient();
-
-  const { data: benefitRow } = await supabase
-    .from("benefits")
-    .select("id, company_id, title, description, min_tier_id")
-    .eq("id", params.id)
-    .single();
-
-  if (!benefitRow) notFound();
-
-  const { data: companyRow } = await supabase
-    .from("companies")
-    .select("id, name, ticker")
-    .eq("id", benefitRow.company_id)
-    .single();
-
-  const { data: tierRows } = await supabase
-    .from("membership_tiers")
-    .select("id, name, min_portfolio_value, rank")
-    .order("rank");
-
-  const benefit: Benefit = {
-    id: benefitRow.id,
-    companyId: benefitRow.company_id,
-    title: benefitRow.title,
-    description: benefitRow.description,
-    minTierId: benefitRow.min_tier_id,
-  };
-  const company = companyRow!;
-  const tiers: MembershipTier[] = (tierRows ?? []).map(
-    (t: { id: string; name: MembershipTier["name"]; min_portfolio_value: number; rank: number }) => ({
-      id: t.id,
-      name: t.name,
-      minPortfolioValue: t.min_portfolio_value,
-      rank: t.rank,
-    }),
-  );
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -60,7 +35,8 @@ export default async function BenefitDetail({ params }: { params: { id: string }
     portfolioWorth = userRow?.portfolio_worth ?? 0;
   }
 
-  const progress = benefitProgress(benefit, portfolioWorth, tiers);
+  const holdings = await getHoldingsForCurrentUser();
+  const progress = benefitProgress(benefit, portfolioWorth, tiers, israeliExposure(holdings));
   const requiredTier = tiers.find((t) => t.id === benefit.minTierId);
   const tierCopy = requiredTier
     ? `Reach ${requiredTier.name} membership (₪${requiredTier.minPortfolioValue.toLocaleString()}+ total portfolio value).`

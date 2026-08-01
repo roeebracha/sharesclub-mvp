@@ -37,9 +37,18 @@ export type Benefit = {
 };
 
 export type Holding = {
-  companyId: string;
-  percentage: number; // % of the user's own portfolio held in this company — visualization only
+  companyId: string | null; // null when the file-imported position didn't match a catalog company
+  rawName: string | null; // security name as it appeared in an imported file, null for manual entries
+  ticker: string | null; // extracted/matched ticker, null for manual entries (use company.ticker instead)
+  isIsraeli: boolean; // true for every manual entry (companies are all Israeli); file-derived otherwise
+  percentage: number; // % of the user's own portfolio held in this position — visualization only
 };
+
+// % of the user's real portfolio in Israeli/TASE securities, independent of whether any of those
+// positions matched a catalog company — see the Israeli-market exposure gate in DECISIONS.md.
+export function israeliExposure(holdings: Holding[]): number {
+  return holdings.filter((h) => h.isIsraeli).reduce((sum, h) => sum + h.percentage, 0);
+}
 
 // The highest-rank tier the user qualifies for.
 export function getUserTier(portfolioWorth: number, tiers: MembershipTier[]): MembershipTier {
@@ -56,10 +65,19 @@ export function getNextTier(
   return tiers.find((t) => t.rank === currentTier.rank + 1) ?? null;
 }
 
-export function isEligible(benefit: Benefit, userTier: MembershipTier, tiers: MembershipTier[]) {
+// Additive gate (see "Israeli-market exposure gate" in DECISIONS.md): tier alone is no longer
+// sufficient — the user must also hold some real exposure to the Israeli market. This does NOT
+// replace the "regardless of which specific company" rule above; it's a separate, market-wide
+// check, not a per-company one.
+export function isEligible(
+  benefit: Benefit,
+  userTier: MembershipTier,
+  tiers: MembershipTier[],
+  israeliExposureValue: number,
+) {
   const requiredTier = tiers.find((t) => t.id === benefit.minTierId);
   if (!requiredTier) return false;
-  return userTier.rank >= requiredTier.rank;
+  return userTier.rank >= requiredTier.rank && israeliExposureValue > 0;
 }
 
 export type BenefitProgress = {
@@ -77,10 +95,11 @@ export function benefitProgress(
   benefit: Benefit,
   portfolioWorth: number,
   tiers: MembershipTier[],
+  israeliExposureValue: number,
 ): BenefitProgress {
   const requiredTier = tiers.find((t) => t.id === benefit.minTierId);
   const userTier = getUserTier(portfolioWorth, tiers);
-  const eligible = requiredTier ? userTier.rank >= requiredTier.rank : false;
+  const eligible = isEligible(benefit, userTier, tiers, israeliExposureValue);
 
   return {
     eligible,

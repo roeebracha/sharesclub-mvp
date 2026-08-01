@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { signUp } from "@/lib/auth";
+import { signUp } from "@/features/auth/data/auth";
 
 export default function Signup() {
   const router = useRouter();

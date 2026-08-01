@@ -2,7 +2,8 @@
 // real data layers (lib/catalog-data.ts, lib/holdings-data.ts, lib/auth.ts).
 // Kept in its own explicit file so no page can accidentally re-import it.
 
-import type { Company, Benefit, Holding, MembershipTier } from "@/lib/eligibility";
+import type { Company, Benefit, Holding, MembershipTier } from "@/lib/domain/eligibility";
+import type { Broker } from "@/features/referrals/data/broker-mappers";
 
 export const tiers: MembershipTier[] = [
   { id: "t-silver", name: "Silver", minPortfolioValue: 0, rank: 1 },
@@ -79,17 +80,28 @@ export const benefits: Benefit[] = [
   },
 ];
 
+export const brokers: Broker[] = [
+  { id: "br1", slug: "meitav", name: "Meitav Trade", logoUrl: null, referralUrl: "https://www.meitav.co.il/trade" },
+  { id: "br2", slug: "ibi", name: "IBI Trade", logoUrl: null, referralUrl: "https://www.ibi.co.il/" },
+];
+
 // Placeholder "logged in" user, used only in tests to exercise eligibility coloring.
 // portfolioWorth of $25,000 lands in Gold (t-gold): eligible for silver+gold
 // benefits, locked out of the platinum one (b6).
+// Manually-added holdings (not from a file import) always match a catalog company, so they're
+// always Israeli exposure by construction — see features/portfolio/data/holdings.ts's addHolding.
+function manualHolding(companyId: string, percentage: number): Holding {
+  return { companyId, rawName: null, ticker: null, isIsraeli: true, percentage };
+}
+
 export const demoUser = {
   portfolioWorth: 25000,
   holdings: [
-    { companyId: "c1", percentage: 5 }, // $1,250 in Aurora
-    { companyId: "c2", percentage: 60 }, // $15,000 in Beacon
-    { companyId: "c4", percentage: 10 }, // $2,500 in NovaTech
-    { companyId: "c5", percentage: 15 }, // $3,750 in Solstice
-    { companyId: "c6", percentage: 5 }, // $1,250 in Pinnacle
+    manualHolding("c1", 5), // $1,250 in Aurora
+    manualHolding("c2", 60), // $15,000 in Beacon
+    manualHolding("c4", 10), // $2,500 in NovaTech
+    manualHolding("c5", 15), // $3,750 in Solstice
+    manualHolding("c6", 5), // $1,250 in Pinnacle
     // c7 (Meridian Books) intentionally has zero holdings — the donut still
     // renders it as unallocated cash; eligibility no longer depends on this.
   ] satisfies Holding[],

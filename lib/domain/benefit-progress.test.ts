@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { benefitProgress, tierProgress, type Benefit, type MembershipTier } from "@/lib/eligibility";
+import { benefitProgress, tierProgress, type Benefit, type MembershipTier } from "@/lib/domain/eligibility";
 
 const tiers: MembershipTier[] = [
   { id: "silver", name: "Silver", minPortfolioValue: 0, rank: 1 },
@@ -17,7 +17,7 @@ const goldBenefit: Benefit = {
 
 describe("benefitProgress", () => {
   it("reports the full ₪ gap when far below the required tier", () => {
-    const p = benefitProgress(goldBenefit, 5000, tiers);
+    const p = benefitProgress(goldBenefit, 5000, tiers, 100);
     expect(p.eligible).toBe(false);
     expect(p.requiredTierName).toBe("Gold");
     expect(p.amountToRequiredTier).toBe(15000);
@@ -25,14 +25,14 @@ describe("benefitProgress", () => {
   });
 
   it("is complete exactly at the required tier's threshold", () => {
-    const p = benefitProgress(goldBenefit, 20000, tiers);
+    const p = benefitProgress(goldBenefit, 20000, tiers, 100);
     expect(p.eligible).toBe(true);
     expect(p.amountToRequiredTier).toBe(0);
     expect(p.progressRatio).toBe(1);
   });
 
   it("stays complete above the required tier's threshold", () => {
-    const p = benefitProgress(goldBenefit, 50000, tiers);
+    const p = benefitProgress(goldBenefit, 50000, tiers, 100);
     expect(p.eligible).toBe(true);
     expect(p.amountToRequiredTier).toBe(0);
     expect(p.progressRatio).toBe(1);
@@ -40,9 +40,14 @@ describe("benefitProgress", () => {
 
   it("gives the same ₪ gap for every benefit that requires the same tier", () => {
     const otherGoldBenefit: Benefit = { ...goldBenefit, id: "b2", companyId: "c2" };
-    const p1 = benefitProgress(goldBenefit, 5000, tiers);
-    const p2 = benefitProgress(otherGoldBenefit, 5000, tiers);
+    const p1 = benefitProgress(goldBenefit, 5000, tiers, 100);
+    const p2 = benefitProgress(otherGoldBenefit, 5000, tiers, 100);
     expect(p1.amountToRequiredTier).toBe(p2.amountToRequiredTier);
+  });
+
+  it("is not eligible at a qualifying tier with 0% Israeli exposure — additive gate", () => {
+    const p = benefitProgress(goldBenefit, 20000, tiers, 0);
+    expect(p.eligible).toBe(false);
   });
 });
 

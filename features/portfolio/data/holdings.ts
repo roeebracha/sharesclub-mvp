@@ -8,7 +8,8 @@
 // didn't need to change.
 
 import { createClient } from "@/lib/supabase/client";
-import type { Holding } from "@/lib/eligibility";
+import type { Holding } from "@/lib/domain/eligibility";
+import { mapHoldingRow } from "./holdings-mappers";
 
 function totalPercentage(holdings: Holding[], excludeCompanyId?: string) {
   return holdings
@@ -31,13 +32,10 @@ export async function getHoldings(): Promise<Holding[]> {
   const userId = await requireUserId(supabase);
   const { data, error } = await supabase
     .from("holdings")
-    .select("company_id, percentage")
+    .select("company_id, raw_name, ticker, is_israeli, percentage")
     .eq("user_id", userId);
   if (error) throw error;
-  return (data ?? []).map((h: { company_id: string; percentage: number }) => ({
-    companyId: h.company_id,
-    percentage: h.percentage,
-  }));
+  return (data ?? []).map(mapHoldingRow);
 }
 
 export async function getPortfolioWorth(): Promise<number> {
@@ -75,7 +73,9 @@ export async function addHolding(companyId: string, percentage: number): Promise
   }
   const { error } = await supabase
     .from("holdings")
-    .insert({ user_id: userId, company_id: companyId, percentage });
+    // Every company in `companies` is Israeli by product definition (see "Benefit catalog
+    // content" in DECISIONS.md), so a manually-picked holding is always Israeli exposure.
+    .insert({ user_id: userId, company_id: companyId, percentage, is_israeli: true });
   if (error) throw error;
   return getHoldings();
 }

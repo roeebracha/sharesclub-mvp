@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { isProtectedRoute, isAuthRoute } from "@/middleware";
 
 describe("isProtectedRoute", () => {
-  it("treats / and /dashboard as protected", () => {
+  it("treats /, /dashboard, and /import as protected", () => {
     expect(isProtectedRoute("/")).toBe(true);
     expect(isProtectedRoute("/dashboard")).toBe(true);
+    expect(isProtectedRoute("/import")).toBe(true);
   });
 
   it("treats other routes as not protected", () => {
