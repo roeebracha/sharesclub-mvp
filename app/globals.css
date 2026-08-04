@@ -5,16 +5,30 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #7c3aed;
+  /* Primary: El Al-sourced navy — the "serious/trustworthy" chrome layer
+     (CTAs, nav, links, focus rings). See DESIGN.md "Color palette". */
+  --primary: #1b358f;
+  /* Secondary: the old primary violet, demoted to a gamification-only accent
+     (bg-glow, donut chart-1, --shadow-glow) — never used for CTAs/nav/links. */
+  --secondary: #7c3aed;
   --accent: #f59e0b;
   --accent-hot: #f97316;
   --success: #16a34a;
   --danger: #dc2626;
 
+  /* RGB triples (not hex) so Tailwind can compose opacity modifiers like
+     bg-primary/10 via rgb(var(--primary-rgb) / <alpha-value>) — see
+     tailwind.config.ts. Keep in sync with the hex values above. */
+  --background-rgb: 255 255 255;
+  --foreground-rgb: 23 23 23;
+  --primary-rgb: 27 53 143;
+  --success-rgb: 22 163 74;
+  --danger-rgb: 220 38 38;
+
   --surface: #faf9fc;
   --surface-elevated: #ffffff;
 
-  --chart-1: var(--primary);
+  --chart-1: var(--secondary);
   --chart-2: var(--accent);
   --chart-3: #22c55e;
   --chart-4: #ec4899;
@@ -22,12 +36,15 @@
   --chart-6: #f97316;
   --chart-cash: #9ca3af;
 
-  --tier-silver: #94a3b8;
-  --tier-gold: #d4a017;
-  --tier-platinum: #7c3aed;
+  /* Matmid-inspired (El Al loyalty program), muted/metallic — see DESIGN.md. */
+  --tier-silver: #71757c;
+  --tier-gold: #a3803c;
+  --tier-platinum: #33343a;
 
-  --shadow-soft: 0 2px 10px -2px rgb(124 58 237 / 0.12);
-  --shadow-elevated: 0 10px 30px -8px rgb(124 58 237 / 0.28);
+  /* Navy-tinted — the "serious" resting/hover elevation layer. */
+  --shadow-soft: 0 2px 10px -2px rgb(27 53 143 / 0.12);
+  --shadow-elevated: 0 10px 30px -8px rgb(27 53 143 / 0.28);
+  /* Violet-tinted, deliberately — the "fun" spark on Button primary hover. */
   --shadow-glow: 0 0 0 1px rgb(124 58 237 / 0.15), 0 8px 24px -4px rgb(124 58 237 / 0.35);
 }
 
@@ -35,11 +52,18 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --primary: #a78bfa;
+    --primary: #254ab0;
+    --secondary: #a78bfa;
     --accent: #fbbf24;
     --accent-hot: #fb923c;
     --success: #4ade80;
     --danger: #f87171;
+
+    --background-rgb: 10 10 10;
+    --foreground-rgb: 237 237 237;
+    --primary-rgb: 37 74 176;
+    --success-rgb: 74 222 128;
+    --danger-rgb: 248 113 113;
 
     --surface: #14121a;
     --surface-elevated: #1c1a24;
@@ -50,8 +74,12 @@
     --chart-6: #fb923c;
     --chart-cash: #6b7280;
 
-    --shadow-soft: 0 2px 10px -2px rgb(167 139 250 / 0.18);
-    --shadow-elevated: 0 10px 30px -8px rgb(167 139 250 / 0.35);
+    --tier-silver: #a8acb3;
+    --tier-gold: #c9a15c;
+    --tier-platinum: #9a9ca3;
+
+    --shadow-soft: 0 2px 10px -2px rgb(37 74 176 / 0.18);
+    --shadow-elevated: 0 10px 30px -8px rgb(37 74 176 / 0.35);
     --shadow-glow: 0 0 0 1px rgb(167 139 250 / 0.22), 0 8px 24px -4px rgb(167 139 250 / 0.45);
   }
 }
@@ -59,7 +87,7 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
@@ -69,7 +97,7 @@ body {
 
   .bg-glow {
     background:
-      radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 70%),
+      radial-gradient(circle at 50% 15%, color-mix(in srgb, var(--secondary) 18%, transparent), transparent 70%),
       radial-gradient(circle at 75% 55%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
   }
 }

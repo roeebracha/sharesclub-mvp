@@ -23,4 +23,12 @@ describe("BenefitCard", () => {
     render(<BenefitCard benefit={benefit} company={company} eligible={false} />);
     expect(screen.queryByText("Eligible")).not.toBeInTheDocument();
   });
+
+  it("shows the plain company name and its sector label instead of a ticker", () => {
+    render(<BenefitCard benefit={benefit} company={company} eligible={false} />);
+    expect(screen.getByText("Aurora Airlines")).toBeInTheDocument();
+    expect(screen.getByText("Aviation")).toBeInTheDocument();
+    expect(screen.queryByText("AURA")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Aurora Airlines · AURA/)).not.toBeInTheDocument();
+  });
 });
