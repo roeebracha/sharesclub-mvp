@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BenefitProgressSummary } from "@/features/benefits/components/BenefitProgressSummary";
+import { BenefitStockTicker } from "@/features/benefits/components/BenefitStockTicker";
 import { SECTOR_META } from "@/features/benefits/components/sector-meta";
 import { ShareModal } from "@/components/ShareModal";
 
@@ -33,7 +34,10 @@ export function BenefitCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{company.name}</p>
-              <p className="text-xs text-foreground/60">{sectorLabel}</p>
+              <p className="flex items-center gap-1.5 text-xs text-foreground/60">
+                {sectorLabel}
+                <BenefitStockTicker ticker={company.ticker} />
+              </p>
             </div>
             {eligible ? (
               <Badge variant="success">Eligible</Badge>

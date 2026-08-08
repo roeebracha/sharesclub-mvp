@@ -1,7 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BenefitCard } from "@/features/benefits/components/BenefitCard";
 import type { Benefit, Company } from "@/lib/domain/eligibility";
+import { resetStockQuoteCache } from "@/lib/stock-quote";
+
+beforeEach(() => resetStockQuoteCache());
+afterEach(() => vi.unstubAllGlobals());
 
 const company: Company = { id: "c1", name: "Aurora Airlines", ticker: "AURA", sector: "aviation" };
 const benefit: Benefit = {
@@ -43,5 +47,17 @@ describe("BenefitCard", () => {
     );
     expect(screen.getByText("Locked")).toBeInTheDocument();
     expect(screen.queryByText("Almost unlocked!")).not.toBeInTheDocument();
+  });
+
+  it("shows the stock ticker next to the sector label once a live quote confirms it", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ price: 16.29, changePercent: 0.5, currency: "ILS" }),
+      }),
+    );
+    render(<BenefitCard benefit={benefit} company={{ ...company, ticker: "ELAL" }} eligible={false} />);
+    expect(await screen.findByText("ELAL.TA")).toBeInTheDocument();
   });
 });
