@@ -20,4 +20,11 @@ describe("BrokerGrid", () => {
     expect(screen.getByText("Meitav Trade").closest("a")).toHaveAttribute("href", "/go/meitav");
     expect(screen.getByText("IBI Trade").closest("a")).toHaveAttribute("href", "/go/ibi");
   });
+
+  it("opens broker links in a new tab, without leaking a window.opener reference", () => {
+    render(<BrokerGrid brokers={brokers} />);
+    const link = screen.getByText("Meitav Trade").closest("a");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
 });
