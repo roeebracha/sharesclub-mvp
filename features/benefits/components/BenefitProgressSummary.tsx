@@ -8,6 +8,7 @@ import { CurrencyAmount } from "@/components/ui/CurrencyAmount";
 const MILESTONES = [0.5, 0.8];
 
 function urgencyLabel(progressRatio: number): string | null {
+  if (progressRatio >= 1) return null;
   if (progressRatio >= 0.8) return "Almost unlocked!";
   if (progressRatio >= 0.5) return "Getting there";
   return null;
