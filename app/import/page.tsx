@@ -12,7 +12,7 @@ export default async function ImportPage() {
           Connect your portfolio
         </h1>
         <p className="mt-3 text-foreground/70">
-          Head to your broker, download your holdings export, then come back here to import it.
+          Head to your broker, download your holdings export, then come back to unlock your perks.
         </p>
       </header>
 
