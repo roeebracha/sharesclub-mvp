@@ -97,9 +97,6 @@ export default function Home() {
                 totalCount={items.length}
                 trigger={<Button variant="primary">Share your progress</Button>}
               />
-              <Button variant="secondary" disabled>
-                Connect my investments account
-              </Button>
             </div>
           </div>
           <LiveHoldingsPanel holdings={holdings} companies={companies} />
