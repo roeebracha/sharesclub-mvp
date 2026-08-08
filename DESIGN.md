@@ -149,6 +149,11 @@ card backdrop.
 - Cards: `rounded-xl border p-4`/`p-5`. Inputs/buttons: `rounded-lg border px-3 py-2 text-sm`.
 - Borders: `border-black/10 dark:border-white/15`. Hover surfaces: `hover:bg-black/5
   dark:hover:bg-white/10`.
+- **Side-by-side content (added 2026-08-08, home page's live-holdings panel next to the portfolio
+  donut):** `grid gap-8 md:grid-cols-2 md:items-start` — single column (stacked) below `md:`, two
+  columns from `md:` up, within the existing `max-w-3xl` container. This is the app's first
+  side-by-side layout; reuse this exact pattern rather than inventing a new one the next time a
+  page needs a real two-column split.
 
 ## Components / primitives
 

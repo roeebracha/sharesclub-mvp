@@ -5,6 +5,7 @@ import confetti from "canvas-confetti";
 import { BenefitCard } from "@/features/benefits/components/BenefitCard";
 import { PortfolioDonut } from "@/features/portfolio/components/PortfolioDonut";
 import { TierBadge } from "@/features/portfolio/components/TierBadge";
+import { LiveHoldingsPanel } from "@/features/portfolio/components/LiveHoldingsPanel";
 import { ShareModal } from "@/components/ShareModal";
 import { Button } from "@/components/ui/Button";
 import {
@@ -79,24 +80,29 @@ export default function Home() {
         </p>
       </header>
 
-      <section className="relative mb-16 flex flex-col items-center gap-6">
+      <section className="relative mb-16">
         <div className="bg-glow pointer-events-none absolute inset-0 -z-10" aria-hidden />
-        <PortfolioDonut
-          holdings={holdings}
-          companies={companies}
-          portfolioWorth={portfolioWorth}
-        />
-        <TierBadge portfolioWorth={portfolioWorth} tiers={tiers} benefits={benefits} />
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <ShareModal
-            variant="portfolio"
-            unlockedCount={ready.length}
-            totalCount={items.length}
-            trigger={<Button variant="primary">Share your progress</Button>}
-          />
-          <Button variant="secondary" disabled>
-            Connect my investments account
-          </Button>
+        <div className="grid gap-8 md:grid-cols-2 md:items-start">
+          <div className="flex flex-col items-center gap-6">
+            <PortfolioDonut
+              holdings={holdings}
+              companies={companies}
+              portfolioWorth={portfolioWorth}
+            />
+            <TierBadge portfolioWorth={portfolioWorth} tiers={tiers} benefits={benefits} />
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <ShareModal
+                variant="portfolio"
+                unlockedCount={ready.length}
+                totalCount={items.length}
+                trigger={<Button variant="primary">Share your progress</Button>}
+              />
+              <Button variant="secondary" disabled>
+                Connect my investments account
+              </Button>
+            </div>
+          </div>
+          <LiveHoldingsPanel holdings={holdings} companies={companies} />
         </div>
       </section>
 
