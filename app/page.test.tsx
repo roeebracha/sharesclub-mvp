@@ -83,6 +83,12 @@ describe("Home", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not show the 'Connect my investments account' placeholder (Import page only)", async () => {
+    render(<Home />);
+    await screen.findByText("10% off any flight");
+    expect(screen.queryByText("Connect my investments account")).not.toBeInTheDocument();
+  });
+
   it("filters the feed by sector", async () => {
     render(<Home />);
     await screen.findByText("10% off any flight");
