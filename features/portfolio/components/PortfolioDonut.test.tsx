@@ -14,7 +14,9 @@ describe("PortfolioDonut", () => {
   it("shows the portfolio total by default", () => {
     render(<PortfolioDonut holdings={holdings} companies={companies} portfolioWorth={10000} />);
     expect(screen.getByText("Portfolio")).toBeInTheDocument();
-    expect(screen.getByText("$10,000")).toBeInTheDocument();
+    // portfolioWorth is always ₪ data; the previous hardcoded "$" here was
+    // asserting a display bug (see PortfolioDonut.tsx), not real behavior.
+    expect(screen.getByText("₪10,000")).toBeInTheDocument();
   });
 
   it("tap reveals the same info a hover would (touch has no hover) and tapping again clears it", () => {

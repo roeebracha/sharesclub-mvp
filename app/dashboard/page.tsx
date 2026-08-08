@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { CurrencyAmount } from "@/components/ui/CurrencyAmount";
 
 export default function DashboardPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -120,7 +121,7 @@ export default function DashboardPage() {
           Portfolio worth
         </h2>
         <form onSubmit={handleSavePortfolio} className="flex items-center gap-3">
-          <span className="text-foreground/60">$</span>
+          <span className="text-foreground/60">₪</span>
           <Input
             type="number"
             min="0"
@@ -133,7 +134,7 @@ export default function DashboardPage() {
           </Button>
         </form>
         <p className="mt-2 text-xs text-foreground/50">
-          Currently saved: ${portfolioWorth}
+          Currently saved: <CurrencyAmount amountILS={portfolioWorth} />
         </p>
       </section>
 

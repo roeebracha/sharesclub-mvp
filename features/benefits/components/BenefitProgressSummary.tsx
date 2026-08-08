@@ -1,6 +1,9 @@
+"use client";
+
 import type { BenefitProgress } from "@/lib/domain/eligibility";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountUp } from "@/components/ui/CountUp";
+import { CurrencyAmount } from "@/components/ui/CurrencyAmount";
 
 const MILESTONES = [0.5, 0.8];
 
@@ -28,7 +31,7 @@ export function BenefitProgressSummary({ progress }: { progress: BenefitProgress
       <ProgressBar value={progress.progressRatio} milestones={MILESTONES} />
       <p className="mt-2 text-xs text-foreground/60">
         Reach <span className="font-medium text-foreground/80">{progress.requiredTierName}</span>{" "}
-        — ₪{Math.round(progress.amountToRequiredTier).toLocaleString()} more in portfolio value
+        — <CurrencyAmount amountILS={progress.amountToRequiredTier} /> more in portfolio value
       </p>
     </div>
   );
