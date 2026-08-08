@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/features/auth/data/auth";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function Header() {
   const pathname = usePathname() ?? "";
@@ -50,43 +51,46 @@ export function Header() {
         >
           Shares<span className="text-primary">Club</span>
         </Link>
-        <nav className="flex items-center gap-0.5 rounded-full bg-black/5 p-1 text-sm dark:bg-white/5 sm:gap-1">
-          {navItems.map(({ href, label }) => {
-            const active = pathname === href;
-            return (
+        <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-0.5 rounded-full bg-black/5 p-1 text-sm dark:bg-white/5 sm:gap-1">
+            {navItems.map(({ href, label }) => {
+              const active = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
+                    active
+                      ? "bg-primary text-white"
+                      : "text-foreground/60 hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+            {loggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-foreground/60 transition-colors hover:text-foreground sm:px-3"
+              >
+                Log out
+              </button>
+            ) : (
               <Link
-                key={href}
-                href={href}
+                href="/login"
                 className={`whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
-                  active
+                  pathname === "/login"
                     ? "bg-primary text-white"
                     : "text-foreground/60 hover:text-foreground"
                 }`}
               >
-                {label}
+                Log in
               </Link>
-            );
-          })}
-          {loggedIn ? (
-            <button
-              onClick={handleLogout}
-              className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-foreground/60 transition-colors hover:text-foreground sm:px-3"
-            >
-              Log out
-            </button>
-          ) : (
-            <Link
-              href="/login"
-              className={`whitespace-nowrap rounded-full px-2.5 py-1.5 transition-colors sm:px-3 ${
-                pathname === "/login"
-                  ? "bg-primary text-white"
-                  : "text-foreground/60 hover:text-foreground"
-              }`}
-            >
-              Log in
-            </Link>
-          )}
-        </nav>
+            )}
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
