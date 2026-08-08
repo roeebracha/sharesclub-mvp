@@ -59,9 +59,26 @@ describe("Home", () => {
     );
     const amount = Math.round(p.amountToRequiredTier).toLocaleString();
 
+    // Testing Library's getByText matcher only sees a node's *direct* text-node
+    // children (not nested elements) via its `content` argument — the amount is
+    // now rendered inside a nested <CurrencyAmount> <span>, so `content` alone
+    // never contains it. Checking `element.textContent` (recursive) inside the
+    // matcher instead is the documented workaround for text split across
+    // multiple elements (same fix already applied in
+    // BenefitProgressSummary.test.tsx for the identical reason).
+    //
+    // Matching on "Platinum" is ambiguous now that both TierBadge's "X more to
+    // reach Platinum" and this benefit's "X more in portfolio value" copy are
+    // split the same way — for this fixture they resolve to the identical ₪
+    // amount, so both paragraphs match. "more in portfolio value" is the
+    // phrase unique to BenefitProgressSummary (TierBadge always says "more to
+    // reach {tier}"), so match on that instead to target the intended element.
     expect(
       await screen.findByText(
-        (content) => content.includes("Platinum") && content.includes(amount),
+        (_content, element) =>
+          !!element?.textContent?.includes("more in portfolio value") &&
+          !!element?.textContent?.includes(amount),
+        { selector: "p" },
       ),
     ).toBeInTheDocument();
   });

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { tierProgress, type Benefit, type MembershipTier } from "@/lib/domain/eligibility";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CountUp } from "@/components/ui/CountUp";
+import { CurrencyAmount } from "@/components/ui/CurrencyAmount";
 
 const TIER_VAR: Record<MembershipTier["name"], string> = {
   Silver: "--tier-silver",
@@ -74,9 +75,13 @@ export function TierBadge({
       </div>
 
       <p className="mt-2 text-center text-xs text-foreground/60">
-        {nextTier
-          ? `₪${Math.round(amountToNextTier).toLocaleString()} more to reach ${nextTier.name}`
-          : "Highest tier reached"}
+        {nextTier ? (
+          <>
+            <CurrencyAmount amountILS={amountToNextTier} /> more to reach {nextTier.name}
+          </>
+        ) : (
+          "Highest tier reached"
+        )}
       </p>
 
       {showUnlocks && nextTier && unlocks.length > 0 && (

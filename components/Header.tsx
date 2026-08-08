@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/features/auth/data/auth";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { CurrencyToggle } from "@/components/ui/CurrencyToggle";
 
 export function Header() {
   const pathname = usePathname() ?? "";
@@ -90,6 +91,7 @@ export function Header() {
             )}
           </nav>
           <ThemeToggle />
+          <CurrencyToggle />
         </div>
       </div>
     </header>

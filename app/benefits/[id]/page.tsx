@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { BenefitProgressSummary } from "@/features/benefits/components/BenefitProgressSummary";
+import { CurrencyAmount } from "@/components/ui/CurrencyAmount";
 import {
   getBenefitById,
   getCompanyById,
@@ -38,9 +39,15 @@ export default async function BenefitDetail({ params }: { params: { id: string }
   const holdings = await getHoldingsForCurrentUser();
   const progress = benefitProgress(benefit, portfolioWorth, tiers, israeliExposure(holdings));
   const requiredTier = tiers.find((t) => t.id === benefit.minTierId);
-  const tierCopy = requiredTier
-    ? `Reach ${requiredTier.name} membership (₪${requiredTier.minPortfolioValue.toLocaleString()}+ total portfolio value).`
-    : "Membership tier requirement unavailable.";
+  const tierCopy = requiredTier ? (
+    <>
+      Reach {requiredTier.name} membership (
+      <CurrencyAmount amountILS={requiredTier.minPortfolioValue} />
+      + total portfolio value).
+    </>
+  ) : (
+    "Membership tier requirement unavailable."
+  );
 
   return (
     <div className="min-h-screen px-6 py-16 sm:px-12 sm:py-24 max-w-3xl mx-auto">

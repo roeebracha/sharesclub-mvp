@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import type { Company, Holding } from "@/lib/domain/eligibility";
+import { CurrencyAmount } from "@/components/ui/CurrencyAmount";
 
 type Slice = {
   label: string;
@@ -125,7 +126,7 @@ export function PortfolioDonut({
             </span>
             <span className="text-lg font-semibold">{focused.percentage}%</span>
             <span className="text-xs text-foreground/60">
-              ~${Math.round(focused.value).toLocaleString()}
+              ~<CurrencyAmount amountILS={focused.value} />
             </span>
           </>
         ) : (
@@ -134,7 +135,7 @@ export function PortfolioDonut({
               Portfolio
             </span>
             <span className="text-lg font-semibold">
-              ${portfolioWorth.toLocaleString()}
+              <CurrencyAmount amountILS={portfolioWorth} />
             </span>
             <span className="text-xs text-foreground/60">{slices.length} slices</span>
           </>

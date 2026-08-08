@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { themeBootScript } from "@/lib/theme";
+import { CurrencyProvider } from "@/components/CurrencyProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,8 +35,10 @@ export default function RootLayout({
           id="theme-script"
           dangerouslySetInnerHTML={{ __html: themeBootScript() }}
         />
-        <Header />
-        {children}
+        <CurrencyProvider>
+          <Header />
+          {children}
+        </CurrencyProvider>
       </body>
     </html>
   );
