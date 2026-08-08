@@ -31,4 +31,17 @@ describe("BenefitCard", () => {
     expect(screen.queryByText("AURA")).not.toBeInTheDocument();
     expect(screen.queryByText(/Aurora Airlines · AURA/)).not.toBeInTheDocument();
   });
+
+  it("shows a full progress bar with no urgency label when locked at 100% tier progress", () => {
+    render(
+      <BenefitCard
+        benefit={benefit}
+        company={company}
+        eligible={false}
+        progress={{ eligible: false, requiredTierName: "Gold", progressRatio: 1, amountToRequiredTier: 0 }}
+      />,
+    );
+    expect(screen.getByText("Locked")).toBeInTheDocument();
+    expect(screen.queryByText("Almost unlocked!")).not.toBeInTheDocument();
+  });
 });

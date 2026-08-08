@@ -48,6 +48,7 @@ describe("benefitProgress", () => {
   it("is not eligible at a qualifying tier with 0% Israeli exposure — additive gate", () => {
     const p = benefitProgress(goldBenefit, 20000, tiers, 0);
     expect(p.eligible).toBe(false);
+    expect(p.progressRatio).toBe(1);
   });
 });
 

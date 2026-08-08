@@ -30,6 +30,12 @@ describe("BenefitProgressSummary", () => {
     expect(screen.getByText("Almost unlocked!")).toBeInTheDocument();
   });
 
+  it("shows no urgency label at 100% progress (still locked, e.g. exposure-gate blocked)", () => {
+    render(<BenefitProgressSummary progress={progress({ progressRatio: 1 })} />);
+    expect(screen.queryByText("Getting there")).not.toBeInTheDocument();
+    expect(screen.queryByText("Almost unlocked!")).not.toBeInTheDocument();
+  });
+
   it("renders the required tier name and remaining amount in the copy", () => {
     render(
       <BenefitProgressSummary
