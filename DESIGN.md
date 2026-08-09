@@ -201,9 +201,10 @@ Locked patterns, confirmed implemented via `framer-motion` + `canvas-confetti` �
 
 ## Page-by-page visual rules
 
-- **Home `/`** (revised 2026-08-09, QA #10): portfolio-only now — donut, `TierBadge`,
-  `LiveHoldingsPanel`, `TaseIndicesStrip`, a link to `/benefits`. The sector filter and benefits
-  feed (grouped by claimable status) moved to their own page below.
+- **Home `/`** (revised 2026-08-09, QA #10 and #11): portfolio-only now — donut, `TierBadge`,
+  `LiveHoldingsPanel`, `TaseIndicesStrip`, `MarketNewsPanel` (Israel + global business headlines,
+  two-column `sm:grid-cols-2`, each headline a new-tab link), and a link to `/benefits`. The
+  sector filter and benefits feed (grouped by claimable status) moved to their own page below.
 - **Benefits `/benefits`** (new 2026-08-09, QA #10): the sector filter + benefits feed grouped by
   claimable status, plus the "Share your progress" affordance — everything that used to live on
   home's second half, unchanged visually, just relocated to its own page.
