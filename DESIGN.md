@@ -162,7 +162,8 @@ card backdrop.
 hot state ≥80%, optional `milestones` ticks), **Modal** (`framer-motion` fade+scale), **CountUp**
 (animated number, respects `prefers-reduced-motion`).
 
-`components/` — shared: **Header** (collapsing pill nav, active-route state, live auth state),
+`components/` — shared: **Header** (collapsing pill nav, active-route state, live auth state, a
+live USD/EUR-per-₪ rate ticker from `sm:` up — added 2026-08-09, hidden below `sm:` for space),
 **ShareCard** (shareable image, percentage-only — never `$`), **ShareModal** (click-to-open modal,
 inert social icon row).
 

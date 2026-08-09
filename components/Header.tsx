@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/features/auth/data/auth";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { CurrencyToggle } from "@/components/ui/CurrencyToggle";
+import { ExchangeRateTicker } from "@/components/ui/ExchangeRateTicker";
 
 export function Header() {
   const pathname = usePathname() ?? "";
@@ -90,6 +91,7 @@ export function Header() {
               </Link>
             )}
           </nav>
+          <ExchangeRateTicker />
           <ThemeToggle />
           <CurrencyToggle />
         </div>

@@ -36,8 +36,77 @@ function writeCache(rate: number): void {
   }
 }
 
-function isFresh(cache: FxRateCache): boolean {
+function isFresh(cache: { fetchedAt: number }): boolean {
   return Date.now() - cache.fetchedAt < FX_RATE_STALE_MS;
+}
+
+// Second pair (EUR), for the header exchange-rate ticker — kept separate from
+// getUsdPerIls/DEFAULT_USD_PER_ILS above (a different consumer, CurrencyProvider,
+// depends on that exact single-rate shape) rather than widening it.
+const FRANKFURTER_RATES_URL = "https://api.frankfurter.dev/v1/latest?base=ILS&symbols=USD,EUR";
+export const DEFAULT_EUR_PER_ILS = 0.25;
+export const FX_RATES_CACHE_KEY = "fxRatesUsdEurPerIls";
+
+export type FxRates = { usdPerIls: number; eurPerIls: number };
+type FxRatesCache = FxRates & { fetchedAt: number };
+
+function readRatesCache(): FxRatesCache | null {
+  try {
+    const raw = localStorage.getItem(FX_RATES_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      typeof parsed?.usdPerIls !== "number" ||
+      typeof parsed?.eurPerIls !== "number" ||
+      typeof parsed?.fetchedAt !== "number"
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeRatesCache(rates: FxRates): void {
+  try {
+    const cache: FxRatesCache = { ...rates, fetchedAt: Date.now() };
+    localStorage.setItem(FX_RATES_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Same tolerance as writeCache above — cache is a nice-to-have, not required.
+  }
+}
+
+// Same never-throws/cached-if-fresh/live-fetch/stale-fallback/default shape as
+// getUsdPerIls, extended to a second symbol in the same Frankfurter call.
+export async function getFxRates(): Promise<FxRates> {
+  const cache = readRatesCache();
+  if (cache && isFresh(cache)) return { usdPerIls: cache.usdPerIls, eurPerIls: cache.eurPerIls };
+
+  try {
+    const res = await fetch(FRANKFURTER_RATES_URL);
+    if (!res.ok) throw new Error(`Frankfurter API responded with ${res.status}`);
+    const data = await res.json();
+    const usdPerIls = data?.rates?.USD;
+    const eurPerIls = data?.rates?.EUR;
+    if (
+      typeof usdPerIls !== "number" ||
+      !Number.isFinite(usdPerIls) ||
+      usdPerIls <= 0 ||
+      typeof eurPerIls !== "number" ||
+      !Number.isFinite(eurPerIls) ||
+      eurPerIls <= 0
+    ) {
+      throw new Error("Frankfurter API returned an unexpected shape");
+    }
+    const rates = { usdPerIls, eurPerIls };
+    writeRatesCache(rates);
+    return rates;
+  } catch {
+    return cache
+      ? { usdPerIls: cache.usdPerIls, eurPerIls: cache.eurPerIls }
+      : { usdPerIls: DEFAULT_USD_PER_ILS, eurPerIls: DEFAULT_EUR_PER_ILS };
+  }
 }
 
 // Never throws / never blocks the UI: cached-if-fresh, else live fetch, else

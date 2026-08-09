@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getUsdPerIls, DEFAULT_USD_PER_ILS, FX_RATE_CACHE_KEY, FX_RATE_STALE_MS } from "./fx-rate";
+import {
+  getUsdPerIls,
+  DEFAULT_USD_PER_ILS,
+  FX_RATE_CACHE_KEY,
+  FX_RATE_STALE_MS,
+  getFxRates,
+  DEFAULT_EUR_PER_ILS,
+  FX_RATES_CACHE_KEY,
+} from "./fx-rate";
 
 function mockFetchResolved(body: unknown, ok = true) {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok, json: () => Promise.resolve(body) }));
@@ -66,5 +74,43 @@ describe("getUsdPerIls", () => {
       throw new Error("boom");
     });
     await expect(getUsdPerIls()).resolves.toBe(DEFAULT_USD_PER_ILS);
+  });
+});
+
+describe("getFxRates", () => {
+  it("fetches and caches both USD and EUR rates in one call", async () => {
+    mockFetchResolved({ rates: { USD: 0.27, EUR: 0.25 } });
+    expect(await getFxRates()).toEqual({ usdPerIls: 0.27, eurPerIls: 0.25 });
+    expect(JSON.parse(localStorage.getItem(FX_RATES_CACHE_KEY)!)).toMatchObject({
+      usdPerIls: 0.27,
+      eurPerIls: 0.25,
+    });
+  });
+
+  it("returns the cached rates without calling fetch when the cache is fresh", async () => {
+    localStorage.setItem(
+      FX_RATES_CACHE_KEY,
+      JSON.stringify({ usdPerIls: 0.28, eurPerIls: 0.26, fetchedAt: Date.now() - 1000 }),
+    );
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    expect(await getFxRates()).toEqual({ usdPerIls: 0.28, eurPerIls: 0.26 });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the defaults when there is no cache and the fetch fails", async () => {
+    mockFetchRejected();
+    expect(await getFxRates()).toEqual({
+      usdPerIls: DEFAULT_USD_PER_ILS,
+      eurPerIls: DEFAULT_EUR_PER_ILS,
+    });
+  });
+
+  it("falls back to the defaults on a malformed response (missing EUR)", async () => {
+    mockFetchResolved({ rates: { USD: 0.27 } });
+    expect(await getFxRates()).toEqual({
+      usdPerIls: DEFAULT_USD_PER_ILS,
+      eurPerIls: DEFAULT_EUR_PER_ILS,
+    });
   });
 });
