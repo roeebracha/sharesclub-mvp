@@ -6,6 +6,7 @@ import { PortfolioDonut } from "@/features/portfolio/components/PortfolioDonut";
 import { TierBadge } from "@/features/portfolio/components/TierBadge";
 import { LiveHoldingsPanel } from "@/features/portfolio/components/LiveHoldingsPanel";
 import { TaseIndicesStrip } from "@/features/portfolio/components/TaseIndicesStrip";
+import { MarketNewsPanel } from "@/features/portfolio/components/MarketNewsPanel";
 import { Button } from "@/components/ui/Button";
 import type { Benefit, Company, Holding, MembershipTier } from "@/lib/domain/eligibility";
 import { getCompanies, getBenefits, getMembershipTiers } from "@/features/benefits/data/catalog-client";
@@ -72,6 +73,10 @@ export default function Home() {
 
       <div className="mb-8">
         <TaseIndicesStrip />
+      </div>
+
+      <div className="mb-8">
+        <MarketNewsPanel />
       </div>
     </div>
   );
