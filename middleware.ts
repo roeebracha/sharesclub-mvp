@@ -43,7 +43,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export function isProtectedRoute(pathname: string) {
-  return pathname === "/" || pathname === "/dashboard" || pathname === "/import";
+  return (
+    pathname === "/" ||
+    pathname === "/dashboard" ||
+    pathname === "/import" ||
+    pathname === "/benefits"
+  );
 }
 
 export function isAuthRoute(pathname: string) {
@@ -51,5 +56,5 @@ export function isAuthRoute(pathname: string) {
 }
 
 export const config = {
-  matcher: ["/", "/dashboard", "/import", "/login", "/signup"],
+  matcher: ["/", "/dashboard", "/import", "/benefits", "/login", "/signup"],
 };

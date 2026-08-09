@@ -2,10 +2,15 @@ import { describe, it, expect } from "vitest";
 import { isProtectedRoute, isAuthRoute } from "@/middleware";
 
 describe("isProtectedRoute", () => {
-  it("treats /, /dashboard, and /import as protected", () => {
+  it("treats /, /dashboard, /import, and /benefits as protected", () => {
     expect(isProtectedRoute("/")).toBe(true);
     expect(isProtectedRoute("/dashboard")).toBe(true);
     expect(isProtectedRoute("/import")).toBe(true);
+    // /benefits (the list page) was carved out of the protected home page in SHR-016 — it uses
+    // the same auth-throwing getHoldings()/getPortfolioWorth() home used, so it needs the same
+    // gate, or an anonymous visit throws "Not signed in." (found via manual QA, not a design
+    // decision to leave it open).
+    expect(isProtectedRoute("/benefits")).toBe(true);
   });
 
   it("treats other routes as not protected", () => {
