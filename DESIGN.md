@@ -217,6 +217,11 @@ Locked patterns, confirmed implemented via `framer-motion` + `canvas-confetti` �
   badge. No hamburger mega-menu, no new category depth beyond the existing sector filter pills.
 - **Benefit detail `/benefits/[id]`, Dashboard `/dashboard`, Checkout `/checkout`:** unchanged
   structurally, inherit the new color tokens.
+- **Tiers & Perks `/tiers` (added 2026-08-09):** a dedicated page listing all three membership
+  tiers as stacked cards (`Current`/`Reached` `Badge`s, `CurrencyAmount` threshold, per-tier perk
+  list from `benefits.minTierId`), with the existing `TierBadge` at the top for the
+  current-tier-progress summary — reuses existing primitives/domain logic (`getUserTier`,
+  `tierProgress`) rather than introducing new ones.
 
 ## Responsive philosophy — mobile-first (locked 2026-08-01)
 

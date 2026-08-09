@@ -56,6 +56,7 @@ describe("Header", () => {
     });
     expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Log in" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Tiers" })).toHaveAttribute("href", "/tiers");
   });
 
   it("highlights the active route with a filled pill", async () => {
