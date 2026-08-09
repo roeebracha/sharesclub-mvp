@@ -27,9 +27,11 @@ const YAHOO_CHART_URL = (symbol: string) =>
 // localStorage): no need to persist a live price across reloads/sessions.
 export const STOCK_QUOTE_CACHE_TTL_MS = 60 * 1000;
 
-// Tel Aviv Stock Exchange (.TA-suffixed symbols) quotes in Agorot ("ILA"), not shekels - e.g.
-// ELAL.TA returning regularMarketPrice: 1629.0 means NIS 16.29, not NIS 1629. Divide by 100.
-// US-listed symbols return "USD" at face value, no conversion.
+// Tel Aviv Stock Exchange (.TA-suffixed symbols) quotes individual shares in Agorot ("ILA"), not
+// shekels - e.g. ELAL.TA returning regularMarketPrice: 1629.0 means NIS 16.29, not NIS 1629.
+// Divide by 100. TASE *indices* (e.g. ^TA125.TA, TA35.TA) report "ILS" directly instead — a point
+// value already in shekel-equivalent units, no /100 quirk. US-listed symbols return "USD" at face
+// value, no conversion either.
 function normalizePrice(rawPrice: number, rawCurrency: string): number {
   return rawCurrency === "ILA" ? rawPrice / 100 : rawPrice;
 }
@@ -46,7 +48,7 @@ export function parseYahooChartResponse(json: unknown): StockQuote | null {
     if (!meta) return null;
 
     const rawCurrency = meta.currency;
-    if (rawCurrency !== "USD" && rawCurrency !== "ILA") return null;
+    if (rawCurrency !== "USD" && rawCurrency !== "ILA" && rawCurrency !== "ILS") return null;
 
     const rawPrice = meta.regularMarketPrice;
     const rawPreviousClose = meta.previousClose;
@@ -59,7 +61,7 @@ export function parseYahooChartResponse(json: unknown): StockQuote | null {
 
     if (!Number.isFinite(price) || !Number.isFinite(changePercent)) return null;
 
-    return { price, changePercent, currency: rawCurrency === "ILA" ? "ILS" : "USD" };
+    return { price, changePercent, currency: rawCurrency === "USD" ? "USD" : "ILS" };
   } catch {
     return null;
   }

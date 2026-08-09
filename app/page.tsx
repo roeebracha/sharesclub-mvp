@@ -6,6 +6,7 @@ import { BenefitCard } from "@/features/benefits/components/BenefitCard";
 import { PortfolioDonut } from "@/features/portfolio/components/PortfolioDonut";
 import { TierBadge } from "@/features/portfolio/components/TierBadge";
 import { LiveHoldingsPanel } from "@/features/portfolio/components/LiveHoldingsPanel";
+import { TaseIndicesStrip } from "@/features/portfolio/components/TaseIndicesStrip";
 import { ShareModal } from "@/components/ShareModal";
 import { Button } from "@/components/ui/Button";
 import {
@@ -102,6 +103,10 @@ export default function Home() {
           <LiveHoldingsPanel holdings={holdings} companies={companies} />
         </div>
       </section>
+
+      <div className="mb-8">
+        <TaseIndicesStrip />
+      </div>
 
       <div className="mb-8 flex flex-wrap items-center gap-0.5 rounded-full bg-black/5 p-1 text-sm dark:bg-white/5 sm:gap-1">
         <button
