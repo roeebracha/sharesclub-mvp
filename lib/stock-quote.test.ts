@@ -33,6 +33,26 @@ const OK_USD_BODY = {
   },
 };
 
+// TASE index quotes (e.g. TA-125, TA-35) report "ILS" directly, unlike individual TASE-listed
+// shares which report "ILA" (Agorot) — an index has no /100 quirk, it's a point value already in
+// shekel-equivalent units.
+const OK_ILS_INDEX_BODY = {
+  chart: {
+    result: [
+      {
+        meta: {
+          currency: "ILS",
+          symbol: "^TA125.TA",
+          instrumentType: "INDEX",
+          regularMarketPrice: 4065.6,
+          previousClose: 4032.47,
+        },
+      },
+    ],
+    error: null,
+  },
+};
+
 const NOT_FOUND_BODY = {
   chart: {
     result: null,
@@ -60,6 +80,13 @@ describe("parseYahooChartResponse", () => {
   it("returns a USD price at face value, no conversion", () => {
     const quote = parseYahooChartResponse(OK_USD_BODY);
     expect(quote).toEqual({ price: 303, changePercent: 1, currency: "USD" });
+  });
+
+  it("returns an ILS index price at face value, no /100 conversion (unlike ILA shares)", () => {
+    const quote = parseYahooChartResponse(OK_ILS_INDEX_BODY);
+    expect(quote?.price).toBe(4065.6);
+    expect(quote?.currency).toBe("ILS");
+    expect(quote?.changePercent).toBeCloseTo(0.8218, 3);
   });
 
   it("returns null for the documented Not Found error shape", () => {
