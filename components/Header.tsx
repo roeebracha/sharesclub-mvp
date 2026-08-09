@@ -40,6 +40,7 @@ export function Header() {
       ? [
           { href: "/dashboard", label: "Dashboard" } as const,
           { href: "/import", label: "Import" } as const,
+          { href: "/tiers", label: "Tiers" } as const,
         ]
       : []),
   ];
