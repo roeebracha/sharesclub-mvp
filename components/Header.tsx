@@ -36,6 +36,7 @@ export function Header() {
 
   const navItems = [
     { href: "/", label: "Home" },
+    { href: "/benefits", label: "Benefits" },
     ...(loggedIn
       ? [
           { href: "/dashboard", label: "Dashboard" } as const,

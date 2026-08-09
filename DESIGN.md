@@ -201,9 +201,12 @@ Locked patterns, confirmed implemented via `framer-motion` + `canvas-confetti` �
 
 ## Page-by-page visual rules
 
-- **Home `/`:** unchanged structurally (portfolio viz + `TierBadge` + sector filter + benefits feed
-  grouped by claimable status) — gets the new color tokens above, plus the `TierBadge` milestone
-  wiring noted in Motion above.
+- **Home `/`** (revised 2026-08-09, QA #10): portfolio-only now — donut, `TierBadge`,
+  `LiveHoldingsPanel`, `TaseIndicesStrip`, a link to `/benefits`. The sector filter and benefits
+  feed (grouped by claimable status) moved to their own page below.
+- **Benefits `/benefits`** (new 2026-08-09, QA #10): the sector filter + benefits feed grouped by
+  claimable status, plus the "Share your progress" affordance — everything that used to live on
+  home's second half, unchanged visually, just relocated to its own page.
 - **Login `/login`, Signup `/signup` — visual upgrade, not a landing page (shipped 2026-08-01):**
   form `Card` uses `elevated` variant on a `.bg-glow` backdrop, existing short headline + one-line
   tagline above the form unchanged. **Explicitly not doing:** stats, testimonials, or social-proof

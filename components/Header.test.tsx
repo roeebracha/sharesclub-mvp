@@ -42,6 +42,8 @@ describe("Header", () => {
     });
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeInTheDocument();
+    // Benefits is ungated — visible whether logged in or not, same as Home.
+    expect(screen.getByRole("link", { name: "Benefits" })).toHaveAttribute("href", "/benefits");
   });
 
   it("renders logged-in nav: Home, Dashboard, and Log out", async () => {
